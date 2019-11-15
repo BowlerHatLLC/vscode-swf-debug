@@ -28,4 +28,5 @@ public class SWFLaunchRequestArguments extends LaunchRequest.LaunchRequestArgume
     public String runtimeExecutable;
     public String[] runtimeArgs;
     public String extdir;
+    public String rootDirectory;
 }

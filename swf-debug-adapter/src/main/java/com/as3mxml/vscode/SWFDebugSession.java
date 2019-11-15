@@ -440,6 +440,16 @@ public class SWFDebugSession extends DebugSession {
                     airLaunchInfo.screenSize = swfArgs.screensize;
                     airLaunchInfo.dpi = swfArgs.screenDPI;
                     airLaunchInfo.versionPlatform = swfArgs.versionPlatform;
+                    if (swfArgs.rootDirectory != null) {
+                        Path rootDir = Paths.get(swfArgs.rootDirectory);
+                        if (!rootDir.isAbsolute()) {
+                            String workspacePath = System.getProperty(WORKSPACE_PROPERTY);
+                            if (workspacePath != null) {
+                                rootDir = Paths.get(workspacePath).resolve(swfArgs.rootDirectory).toAbsolutePath();
+                            }
+                        }
+                        airLaunchInfo.applicationContentRootDir = rootDir.toFile();
+                    }
                     if (adlPath != null) {
                         airLaunchInfo.airDebugLauncher = adlPath.toFile();
                     } else if (swfArgs.runtimeExecutable != null) {
