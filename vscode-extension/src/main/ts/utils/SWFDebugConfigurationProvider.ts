@@ -39,6 +39,7 @@ interface SWFDebugConfiguration extends vscode.DebugConfiguration {
   versionPlatform?: string;
   runtimeExecutable?: string;
   runtimeArgs?: string[];
+  rootDirectory?: string;
   extdir?: string;
   connect?: boolean;
   port?: number;

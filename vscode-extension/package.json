@@ -169,6 +169,14 @@
                 ],
                 "description": "Path to directory containing unpackaged AIR native extensions for debugging. Relative paths are based on workspace root.",
                 "default": null
+              },
+              "rootDirectory": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "(Advanced) Specifies the root directory of the application to run. If not specified, the directory containing the application descriptor file is used.",
+                "default": null
               }
             }
           }
