@@ -53,9 +53,6 @@ export default class SWFDebugAdapterDescriptorFactory
     if (paths.sdkPath) {
       //don't pass in an SDK unless we have one set
       args.unshift("-Dflexlib=" + path.resolve(paths.sdkPath, "frameworks"));
-      throw new Error(
-        "SWF debugger launch failed. Framework SDK path not found."
-      );
     }
     return new vscode.DebugAdapterExecutable(paths.javaPath, args);
   }
