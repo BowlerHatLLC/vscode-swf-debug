@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"command": "mvn",
+			"args": [
+				"clean",
+				"package",
+				"-s",
+				"settings-template.xml"
+			]
+		},
+		{
+			"label": "build-debug",
+			"command": "mvn",
+			"args": [
+				"package",
+				"-s",
+				"settings-template.xml",
+				"-Dskip-vsce=true",
+				"-DskipTests"
+			]
+		}
+	]
+}
