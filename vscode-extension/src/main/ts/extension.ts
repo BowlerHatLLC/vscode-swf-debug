@@ -55,7 +55,7 @@ function debugPathsCallback() {
   let as3mxmlExtension = vscode.extensions.getExtension(
     "bowlerhatllc.vscode-nextgenas"
   );
-  if (as3mxmlExtension) {
+  if (as3mxmlExtension && as3mxmlExtension.isActive) {
     sdkPath = as3mxmlExtension.exports.frameworkSDKPath;
   }
 
