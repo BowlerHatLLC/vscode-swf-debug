@@ -1,6 +1,6 @@
 # SWF Debugger for Visual Studio Code
 
-This README file is intended for contributors to the extension. If you simply want to install the latest stable version of the extension, please visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug). For help using the extension, visit the [wiki](https://github.com/BowlerHatLLC/vscode-swf-debug/wiki) for detailed instructions.
+This README file is intended for contributors to the extension. If you simply want to install the latest stable version of the extension, please visit the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug). For help using the extension, visit the [vscode-as3mxml wiki](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki) for detailed instructions.
 
 ## Modules
 
