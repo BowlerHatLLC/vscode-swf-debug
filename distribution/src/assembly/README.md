@@ -15,6 +15,10 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 ## Requirements
 
+- Visual Studio Code 1.37
+- Java 1.8 Runtime
+- Adobe AIR or Adobe Flash Player
+
 ### Adobe AIR
 
 To debug [Adobe AIR](https://www.adobe.com/products/air.html) applications, download the **Adobe AIR SDK** for Windows or macOS, which is available from HARMAN's website:
