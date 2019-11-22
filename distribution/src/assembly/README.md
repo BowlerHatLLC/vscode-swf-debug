@@ -6,6 +6,7 @@ Enables debugging applications in [Adobe AIR](https://www.adobe.com/products/air
 - [Getting Started](#getting-started)
   - [ActionScript & MXML](#actionscript-and-mxml)
   - [OpenFL](#openfl)
+  - [Haxe](#haxe)
 - [Additional Examples](#additional-examples)
 - [List of launch configuration attributes](#launch-configuration-attributes)
 - [Support this project!](#support-this-project)
@@ -36,6 +37,7 @@ Depending on which language/framework builds the _.swf_ file, the steps to confi
 
 - [ActionScript and MXML projects](#actionscript-and-mxml)
 - [OpenFL projects](#openfl)
+- [Haxe projects](#haxe)
 
 ### ActionScript and MXML
 
@@ -133,7 +135,7 @@ Use the `rootDirectory` attribute to specify that the app's content is not locat
 
 Set the `profile` attribute to either `desktop` or `mobileDevice`, depending on which platform should be simulated.
 
-Finally, the SWF debugger needs the location of the **adl** executable from the Adobe AIR SDK. It cannot be automatically detected at this time. Pass the **adl** path to the `runtimeExecutable` attribute.
+Finally, the SWF debugger needs the location of the **adl** executable from the Adobe AIR SDK. Pass the absolute path to the `runtimeExecutable` attribute.
 
 The following example _launch.json_ file combines all of these values to configure Adobe AIR debugging for an OpenFL project:
 
@@ -148,13 +150,13 @@ The following example _launch.json_ file combines all of these values to configu
       "profile": "desktop",
       "program": "${workspaceRoot}/build/air/application.xml",
       "rootDirectory": "${workspaceRoot}/build/air/bin",
-      "runtimeExecutable": "/path/to/AIR_SDK/bin/adl"
+      "runtimeExecutable": "/absolute/path/to/AIR_SDK/bin/adl"
     }
   ]
 }
 ```
 
-Ideally, the path to **adl** should be absolute, instead of being relative to the current workspace folder. On macOS, use _adl_ as the excutable name. On Windows, use _adl.exe_.
+On macOS, use _adl_ as the excutable name. On Windows, use _adl.exe_.
 
 > When setting up Lime and OpenFL, you may have already [set up the path to the Adobe AIR SDK](https://lime.software/docs/advanced-setup/air/), which is stored in _~/.lime/config.xml_. It's a good idea to use the same SDK for debugging.
 
@@ -193,14 +195,71 @@ When targeting Adobe AIR, run the `lime: build air -debug` task:
       "type": "swf",
       "request": "launch",
       "name": "Launch SWF",
+      "profile": "desktop",
       "program": "${workspaceRoot}/build/air/application.xml",
       "rootDirectory": "${workspaceRoot}/build/air/bin",
-      "runtimeExecutable": "/path/to/AIR_SDK/bin/adl",
+      "runtimeExecutable": "/absolute/path/to/AIR_SDK/bin/adl",
       "preLaunchTask": "lime: build air -debug"
     }
   ]
 }
 ```
+
+### Haxe
+
+When using [Haxe](https://haxe.org/) to target Adobe AIR or Flash Player, certain compiler options must be used to enable debugging, and additional SWF launch configuration attributes need to be set manually.
+
+To compile a _.swf_ file with Haxe that may be used with the SWF debug extension, add `-debug` and `-D fdb` to the project's [_.hxml_ file](https://haxe.org/manual/compiler-usage-hxml.html), as shown in the example below:
+
+```hxml
+-cp src
+-main com.example.MyProject
+-swf bin/MyProject.swf
+-swf-version 30
+-swf-header 960:640:60:ffffff
+-debug
+-D fdb
+```
+
+To debug in Adobe Flash Player, set the `program` attribute in _launch.json_ to the path specified by the `-swf` Haxe compiler option:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "swf",
+      "request": "launch",
+      "name": "Launch SWF",
+      "program": "${workspaceFolder}/bin/MyProject.swf"
+    }
+  ]
+}
+```
+
+To debug in Adobe AIR, set the `program` attribute in _launch.json_ to the path of an Adobe AIR application descriptor.
+
+Set the `profile` attribute to either `desktop` or `mobileDevice`, depending on which platform should be simulated.
+
+Finally, the SWF debugger needs the location of the **adl** executable from the Adobe AIR SDK. Pass the absolute path to the `runtimeExecutable` attribute.
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "swf",
+      "request": "launch",
+      "name": "Launch SWF",
+      "profile": "desktop",
+      "program": "${workspaceRoot}/bin/MyProject-app.xml",
+      "runtimeExecutable": "/absolute/path/to/AIR_SDK/bin/adl"
+    }
+  ]
+}
+```
+
+On macOS, use _adl_ as the excutable name. On Windows, use _adl.exe_.
 
 ## Additional Examples
 
