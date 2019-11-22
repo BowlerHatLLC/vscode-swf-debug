@@ -31,5 +31,4 @@ The [SWF Debugger for Visual Studio Code](https://marketplace.visualstudio.com/i
 Special thanks to the following sponsors for their generous support:
 
 - [Moonshine IDE](http://moonshine-ide.com/)
-
 - [Dedoose](https://www.dedoose.com/)
