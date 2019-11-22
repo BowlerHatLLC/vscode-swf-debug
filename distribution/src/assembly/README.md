@@ -1,6 +1,8 @@
 # SWF Debugger for Visual Studio Code
 
-Enables debugging applications in [Adobe AIR](https://www.adobe.com/products/air.html) and [Adobe Flash Player](https://www.adobe.com/products/flashplayer.html). Supports breakpoints in _.as_, _.mxml_, and _.hx_ source files.
+Enables debugging applications in the [Adobe AIR](https://www.adobe.com/products/air.html) and [Adobe Flash Player](https://www.adobe.com/products/flashplayer.html) runtimes. Supports source files written in ActionScript, MXML, or Haxe.
+
+Extension created by [Josh Tynjala](https://patreon.com/josht).
 
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
@@ -15,7 +17,7 @@ Enables debugging applications in [Adobe AIR](https://www.adobe.com/products/air
 
 ### Adobe AIR
 
-To debug Adobe AIR applications, download the **Adobe AIR SDK** for Windows or macOS, which is available from HARMAN's website:
+To debug [Adobe AIR](https://www.adobe.com/products/air.html) applications, download the **Adobe AIR SDK** for Windows or macOS, which is available from HARMAN's website:
 
 - [Download Adobe AIR SDK from HARMAN](https://airsdk.harman.com/download)
 
@@ -25,11 +27,11 @@ For Adobe AIR version 32.0 or older, download it from Adobe's website instead:
 
 ### Adobe Flash Player
 
-To debug _.swf_ files in Adobe Flash Player, download the **Flash Player projector content debugger** for Windows, macOS, or Linux, which is available from Adobe's website.
+To debug _.swf_ files in [Adobe Flash Player](https://www.adobe.com/products/flashplayer.html), download the **Flash Player projector content debugger** for Windows, macOS, or Linux, which is available from Adobe's website.
 
 - [Adobe Flash Player Support Center: Debug Downloads](https://www.adobe.com/support/flashplayer/debug_downloads.html)
 
-> Be sure to make the Flash Player the operating system's default program for the _.swf_ file extension. If it's not the defalt program, manually specify the executable path using the `runtimeExecutable` attribute in _launch.json_.
+> Be sure to make the Flash Player the operating system's default program for the _.swf_ file extension. If it's not the default program, it's possible manually specify the executable path using the `runtimeExecutable` attribute in _launch.json_ instead.
 
 ## Getting Started
 
@@ -43,7 +45,7 @@ Depending on which language/framework builds the _.swf_ file, the steps to confi
 
 This extension offers tight integration with the [ActionScript & MXML langauge extension](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas). Many attributes in the workspace's _launch.json_ file can be omitted because they will be populated automatically based on the project's [_asconfig.json_](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/asconfig.json) file.
 
-ActionScript & MXML projects built using any of the following SDKs or tools may be debugged with this extension:
+ActionScript & MXML projects built using any of the following SDKs or tools may be debugged using the SWF debug extension:
 
 - Adobe AIR SDK & Compiler
 - Adobe Animate
@@ -303,7 +305,7 @@ For a larger list of common mobile devices, see [launch.json configuration setti
 
 ## Launch configuration attributes
 
-The following attributes may be customized in _launch.json_ for the configurations of type `swf`.
+The following lists of attributes may be customized in _launch.json_ for the configurations of type `swf`. They are divided by request type — either `launch` or `attach`.
 
 ### Launch request
 
