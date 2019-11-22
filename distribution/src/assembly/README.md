@@ -2,7 +2,7 @@
 
 Enables debugging applications in the [Adobe AIR](https://www.adobe.com/products/air.html) and [Adobe Flash Player](https://www.adobe.com/products/flashplayer.html) runtimes. Supports source files written in ActionScript, MXML, or Haxe.
 
-Extension created by [Josh Tynjala](https://patreon.com/josht).
+Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). By [becoming a patron](https://www.patreon.com/bePatron?c=203199), you can directly support the ongoing development of this project.
 
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
@@ -387,7 +387,7 @@ If the value of the `request` attribute is set to `attach`, the following attrib
 
 ## Support this project
 
-The [SWF debugger extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug) is developed by [Josh Tynjala](http://patreon.com/josht) — thanks to the generous support of developers and small businesses in the community. Folks just like you! Please consider [becoming a patron](https://www.patreon.com/bePatron?c=203199).
+The [SWF debugger extension for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug) is developed by [Josh Tynjala](http://patreon.com/josht) — thanks to the generous support of developers and small businesses in the community. Folks just like you! By [becoming a patron](https://www.patreon.com/bePatron?c=203199), you can join them in supporting the ongoing development of this project.
 
 [Support Josh Tynjala on Patreon](http://patreon.com/josht)
 
