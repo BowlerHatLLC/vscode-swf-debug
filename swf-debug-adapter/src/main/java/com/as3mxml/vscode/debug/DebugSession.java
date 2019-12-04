@@ -176,6 +176,14 @@ public abstract class DebugSession extends ProtocolServer {
             map.put("_exception", e.getMessage());
             sendErrorResponse(response, 1104, "error while processing request '{_request}' (exception: {_exception})",
                     map);
+        } catch (Error e) {
+            System.err.println("Error during request command: " + command);
+            e.printStackTrace(System.err);
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("_request", command);
+            map.put("_exception", e.getMessage());
+            sendErrorResponse(response, 1104, "error while processing request '{_request}' (exception: {_exception})",
+                    map);
         }
 
         if (command.equals("disconnect")) {
