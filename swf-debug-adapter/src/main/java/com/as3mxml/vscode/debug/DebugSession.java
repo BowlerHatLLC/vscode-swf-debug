@@ -154,6 +154,10 @@ public abstract class DebugSession extends ProtocolServer {
                 setBreakpoints(response, (SetBreakpointsRequest.SetBreakpointsArguments) arguments);
                 break;
             }
+            case "setExceptionBreakpoints": {
+                setExceptionBreakpoints(response, arguments);
+                break;
+            }
             case "evaluate": {
                 evaluate(response, (EvaluateRequest.EvaluateArguments) arguments);
                 break;
@@ -200,6 +204,8 @@ public abstract class DebugSession extends ProtocolServer {
     public abstract void disconnect(Response response, Request.RequestArguments arguments);
 
     public abstract void setBreakpoints(Response response, SetBreakpointsRequest.SetBreakpointsArguments arguments);
+
+    public abstract void setExceptionBreakpoints(Response response, Request.RequestArguments arguments);
 
     public abstract void continueCommand(Response response, Request.RequestArguments arguments);
 

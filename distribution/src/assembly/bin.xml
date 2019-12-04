@@ -35,9 +35,18 @@
       <outputDirectory>bundled-debugger</outputDirectory>
       <includes>
         <include>debugger-*.jar</include>
+        <include>compiler-*.jar</include>
+        <include>compiler-common-*.jar</include>
         <include>swfutils-*.jar</include>
+        <include>antlr-2*.jar</include>
+        <include>commons-io-*.jar</include>
         <include>gson-*.jar</include>
+        <include>guava-*.jar</include>
       </includes>
+      <excludes>
+        <exclude>compiler-externc-*.jar</exclude>
+        <exclude>compiler-jburg-types-*.jar</exclude>
+      </excludes>
     </fileSet>
     <fileSet>
       <directory>../check-java-version/target</directory>

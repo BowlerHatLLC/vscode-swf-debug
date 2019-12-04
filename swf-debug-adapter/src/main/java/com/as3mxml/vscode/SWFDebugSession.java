@@ -950,6 +950,10 @@ public class SWFDebugSession extends DebugSession {
         }
     }
 
+    public void setExceptionBreakpoints(Response response, Request.RequestArguments arguments) {
+        sendResponse(response);
+    }
+
     public void continueCommand(Response response, Request.RequestArguments arguments) {
         try {
             swfSession.resume();
