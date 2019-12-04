@@ -16,12 +16,12 @@ limitations under the License.
 package com.as3mxml.vscode;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.net.ConnectException;
 import java.net.URI;
@@ -229,9 +229,9 @@ public class SWFDebugSession extends DebugSession {
                     cancelRunner = true;
                     sendEvent(new TerminatedEvent());
                 } catch (Exception e) {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    e.printStackTrace(new PrintStream(buffer));
-                    sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
                 }
                 try {
                     java.lang.Thread.sleep(50);
@@ -738,24 +738,24 @@ public class SWFDebugSession extends DebugSession {
             success = false;
         } catch (IOException e) {
             success = false;
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         if (response.success) {
             try {
                 swfSession.bind();
             } catch (VersionException e) {
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                e.printStackTrace(new PrintStream(buffer));
-                sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
             }
             try {
                 manager.stopListening();
             } catch (IOException e) {
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                e.printStackTrace(new PrintStream(buffer));
-                sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
             }
 
             cancelRunner = false;
@@ -831,13 +831,13 @@ public class SWFDebugSession extends DebugSession {
                 }
             }
         } catch (InProgressException e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         } catch (NoResponseException e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         if (foundSourceFile == null && !badExtension) {
             //the file was not found, but it has a supported extension,
@@ -858,13 +858,13 @@ public class SWFDebugSession extends DebugSession {
             }
             savedLogLocations.remove(path);
         } catch (NoResponseException e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         } catch (NotConnectedException e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         List<Breakpoint> result = new ArrayList<>();
         for (int i = 0, count = breakpoints.length; i < count; i++) {
@@ -899,14 +899,14 @@ public class SWFDebugSession extends DebugSession {
                         responseBreakpoint.verified = false;
                     }
                 } catch (NoResponseException e) {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    e.printStackTrace(new PrintStream(buffer));
-                    sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
                     responseBreakpoint.verified = false;
                 } catch (NotConnectedException e) {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    e.printStackTrace(new PrintStream(buffer));
-                    sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
                     responseBreakpoint.verified = false;
                 }
             }
@@ -955,9 +955,9 @@ public class SWFDebugSession extends DebugSession {
             swfSession.resume();
             stopWaitingForResume();
         } catch (Exception e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -967,9 +967,9 @@ public class SWFDebugSession extends DebugSession {
             swfSession.stepOver();
             stopWaitingForResume();
         } catch (Exception e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -979,9 +979,9 @@ public class SWFDebugSession extends DebugSession {
             swfSession.stepInto();
             stopWaitingForResume();
         } catch (Exception e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -991,9 +991,9 @@ public class SWFDebugSession extends DebugSession {
             swfSession.stepOut();
             stopWaitingForResume();
         } catch (Exception e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -1003,9 +1003,9 @@ public class SWFDebugSession extends DebugSession {
             swfSession.suspend();
             stopWaitingForResume();
         } catch (Exception e) {
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            e.printStackTrace(new PrintStream(buffer));
-            sendOutputEvent("Exception in debugger: " + buffer.toString() + "\n");
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }

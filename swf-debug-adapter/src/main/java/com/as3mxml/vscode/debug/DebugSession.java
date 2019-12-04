@@ -15,6 +15,8 @@ limitations under the License.
 */
 package com.as3mxml.vscode.debug;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 
@@ -169,21 +171,19 @@ public abstract class DebugSession extends ProtocolServer {
                 break;
             }
         } catch (Exception e) {
-            System.err.println("Exception during request command: " + command);
-            e.printStackTrace(System.err);
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
             HashMap<String, Object> map = new HashMap<>();
             map.put("_request", command);
-            map.put("_exception", e.getMessage());
-            sendErrorResponse(response, 1104, "error while processing request '{_request}' (exception: {_exception})",
-                    map);
+            map.put("_exception", writer.toString());
+            sendErrorResponse(response, 1104, "error while processing request '{_request}'\n{_exception}", map);
         } catch (Error e) {
-            System.err.println("Error during request command: " + command);
-            e.printStackTrace(System.err);
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
             HashMap<String, Object> map = new HashMap<>();
             map.put("_request", command);
-            map.put("_exception", e.getMessage());
-            sendErrorResponse(response, 1104, "error while processing request '{_request}' (exception: {_exception})",
-                    map);
+            map.put("_exception", writer.toString());
+            sendErrorResponse(response, 1104, "error while processing request '{_request}'\n{_exception}", map);
         }
 
         if (command.equals("disconnect")) {
