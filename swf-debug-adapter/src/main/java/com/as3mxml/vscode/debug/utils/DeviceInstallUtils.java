@@ -229,10 +229,12 @@ public class DeviceInstallUtils {
 			//   1	iPhone  	0000000000000000000000000000000000000000	iPhone
 			String line = null;
 			while ((line = reader.readLine()) != null) {
-				if (line.startsWith("   ")) {
+				//line may start with either 2 or 3 spaces
+				if (line.startsWith("  ")) {
+					line = line.trim(); //strip spaces from beginning
 					int index = line.indexOf("\t");
 					if (index != -1) {
-						return line.substring(3, index);
+						return line.substring(0, index);
 					}
 				}
 			}
