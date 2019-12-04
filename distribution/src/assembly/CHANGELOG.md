@@ -1,5 +1,11 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.0.1
+
+### Fixed Issues
+
+- Watch: Fixed issue where adding any watch expression failed with an error that made the debugger unresponsive.
+
 ## v1.0.0
 
 ### New Features
