@@ -385,9 +385,21 @@ public class SWFDebugSession extends DebugSession {
                 idbRelativePath += FILE_EXTENSION_EXE;
             }
             adlPath = flexHome.resolve(adlRelativePath);
+            if (!adlPath.toFile().exists()) {
+                adlPath = null;
+            }
             adtPath = flexHome.resolve(adtRelativePath);
+            if (!adtPath.toFile().exists()) {
+                adtPath = null;
+            }
             adbPath = flexHome.resolve(adbRelativePath);
+            if (!adbPath.toFile().exists()) {
+                adbPath = null;
+            }
             idbPath = flexHome.resolve(idbRelativePath);
+            if (!idbPath.toFile().exists()) {
+                idbPath = null;
+            }
         }
     }
 
