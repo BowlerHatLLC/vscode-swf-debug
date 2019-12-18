@@ -450,10 +450,10 @@ public class SWFDebugSession extends DebugSession {
                         }
                         airLaunchInfo.applicationContentRootDir = rootDir.toFile();
                     }
-                    if (adlPath != null) {
-                        airLaunchInfo.airDebugLauncher = adlPath.toFile();
-                    } else if (swfArgs.runtimeExecutable != null) {
+                    if (swfArgs.runtimeExecutable != null) {
                         airLaunchInfo.airDebugLauncher = Paths.get(swfArgs.runtimeExecutable).toFile();
+                    } else if (adlPath != null) {
+                        airLaunchInfo.airDebugLauncher = adlPath.toFile();
                     } else {
                         sendErrorResponse(response, 10001,
                                 "Error launching SWF debug session. Runtime not found for program: " + program);
@@ -526,24 +526,26 @@ public class SWFDebugSession extends DebugSession {
                     + e.getExitValue() + "\n\n" + e.getMessage() + "\n\n" + e.getCommandOutput());
             return;
         } catch (IOException e) {
-            System.err.println("Exception in debugger on launch request:");
-            e.printStackTrace(System.err);
-            sendErrorResponse(response, 10001, "Error launching SWF debug session.");
+            sendErrorResponse(response, 10001, "Error launching SWF debug session.\n" + e.getMessage());
             return;
         }
         if (swfSession != null) {
             try {
                 swfSession.bind();
             } catch (VersionException e) {
-                System.err.println("Exception in debugger on bind session:");
-                e.printStackTrace(System.err);
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                sendErrorResponse(response, 10001, "Error launching SWF debug session.\n" + writer.toString());
+                return;
             }
         }
         try {
             manager.stopListening();
         } catch (IOException e) {
-            System.err.println("Exception in debugger on stop listening:");
-            e.printStackTrace(System.err);
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendErrorResponse(response, 10001, "Exception in debugger on stop listening:\n" + writer.toString());
+            return;
         }
         sendResponse(response);
         cancelRunner = false;
