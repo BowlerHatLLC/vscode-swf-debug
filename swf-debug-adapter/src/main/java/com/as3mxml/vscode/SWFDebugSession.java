@@ -972,6 +972,8 @@ public class SWFDebugSession extends DebugSession {
         try {
             swfSession.resume();
             stopWaitingForResume();
+        } catch (NoResponseException e) {
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
@@ -984,6 +986,8 @@ public class SWFDebugSession extends DebugSession {
         try {
             swfSession.stepOver();
             stopWaitingForResume();
+        } catch (NoResponseException e) {
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
@@ -1008,6 +1012,8 @@ public class SWFDebugSession extends DebugSession {
         try {
             swfSession.stepOut();
             stopWaitingForResume();
+        } catch (NoResponseException e) {
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
@@ -1020,6 +1026,8 @@ public class SWFDebugSession extends DebugSession {
         try {
             swfSession.suspend();
             stopWaitingForResume();
+        } catch (NoResponseException e) {
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
