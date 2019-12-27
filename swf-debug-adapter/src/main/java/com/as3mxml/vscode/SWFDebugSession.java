@@ -17,6 +17,7 @@ package com.as3mxml.vscode;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -536,6 +537,9 @@ public class SWFDebugSession extends DebugSession {
         } catch (CommandLineException e) {
             sendErrorResponse(response, 10001, "Error launching SWF debug session. Process exited with code: "
                     + e.getExitValue() + "\n\n" + e.getMessage() + "\n\n" + e.getCommandOutput());
+            return;
+        } catch (FileNotFoundException e) {
+            sendErrorResponse(response, 10001, "Error launching SWF debug session. File not found: " + e.getMessage());
             return;
         } catch (IOException e) {
             sendErrorResponse(response, 10001, "Error launching SWF debug session.\n" + e.getMessage());
