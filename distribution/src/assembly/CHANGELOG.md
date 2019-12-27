@@ -1,5 +1,15 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.0.2
+
+### Fixed Issues
+
+- Linux: Fixed broken detection of _flashplayerdebugger_ executable location.
+- Adobe AIR: Fixed issue where a custom `runtimeExecutable` in _launch.json_ would be ignored in some cases.
+- Adobe AIR: Fixed issue where debugger might try to reference default paths to Adobe AIR executables, even if the SDK did not contain them.
+- Adobe AIR: Fixed issue where detecting iOS devices failed if device handle were three digits instead of two.
+- General: If a command like step in/out/over times out, prints a simpler message that no longer contains a stack trace to avoid looking like a crash.
+
 ## v1.0.1
 
 ### Fixed Issues
