@@ -522,8 +522,13 @@ public class SWFDebugSession extends DebugSession {
                     //notice that we use the value of launcher if it isn't null, but
                     //we don't actually use the value of player. player's purpose is
                     //more about verifying that a runtime can be auto-detected.
-                    swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null,
-                            null, launcher);
+                    if (launcher != null) {
+                        swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null,
+                                null, launcher);
+                    } else {
+                        swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null,
+                                null);
+                    }
                 }
             }
         } catch (CommandLineException e) {
