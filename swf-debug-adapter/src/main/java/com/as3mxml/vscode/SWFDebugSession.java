@@ -971,11 +971,20 @@ public class SWFDebugSession extends DebugSession {
 
     public void continueCommand(Response response, Request.RequestArguments arguments) {
         try {
+            if (!swfSession.isSuspended()) {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
             swfSession.resume();
             stopWaitingForResume();
+        } catch (NotSuspendedException e) {
+            response.success = false;
         } catch (NoResponseException e) {
+            response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
+            response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
             sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
@@ -985,11 +994,20 @@ public class SWFDebugSession extends DebugSession {
 
     public void next(Response response, Request.RequestArguments arguments) {
         try {
+            if (!swfSession.isSuspended()) {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
             swfSession.stepOver();
             stopWaitingForResume();
+        } catch (NotSuspendedException e) {
+            response.success = false;
         } catch (NoResponseException e) {
+            response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
+            response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
             sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
@@ -999,9 +1017,20 @@ public class SWFDebugSession extends DebugSession {
 
     public void stepIn(Response response, Request.RequestArguments arguments) {
         try {
+            if (!swfSession.isSuspended()) {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
             swfSession.stepInto();
             stopWaitingForResume();
+        } catch (NotSuspendedException e) {
+            response.success = false;
+        } catch (NoResponseException e) {
+            response.success = false;
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
+            response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
             sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
@@ -1011,11 +1040,20 @@ public class SWFDebugSession extends DebugSession {
 
     public void stepOut(Response response, Request.RequestArguments arguments) {
         try {
+            if (!swfSession.isSuspended()) {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
             swfSession.stepOut();
             stopWaitingForResume();
+        } catch (NotSuspendedException e) {
+            response.success = false;
         } catch (NoResponseException e) {
+            response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
+            response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
             sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
@@ -1025,11 +1063,18 @@ public class SWFDebugSession extends DebugSession {
 
     public void pause(Response response, Request.RequestArguments arguments) {
         try {
+            if (swfSession.isSuspended()) {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
             swfSession.suspend();
             stopWaitingForResume();
         } catch (NoResponseException e) {
+            response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
+            response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
             sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
