@@ -42,18 +42,24 @@ import com.as3mxml.vscode.debug.events.InitializedEvent;
 import com.as3mxml.vscode.debug.events.OutputEvent;
 import com.as3mxml.vscode.debug.events.StoppedEvent;
 import com.as3mxml.vscode.debug.events.TerminatedEvent;
+import com.as3mxml.vscode.debug.events.ThreadEvent;
 import com.as3mxml.vscode.debug.protocol.Request;
 import com.as3mxml.vscode.debug.protocol.Response;
 import com.as3mxml.vscode.debug.requests.AttachRequest;
+import com.as3mxml.vscode.debug.requests.ContinueRequest;
 import com.as3mxml.vscode.debug.requests.EvaluateRequest;
 import com.as3mxml.vscode.debug.requests.ExceptionInfoRequest;
 import com.as3mxml.vscode.debug.requests.InitializeRequest;
 import com.as3mxml.vscode.debug.requests.LaunchRequest;
+import com.as3mxml.vscode.debug.requests.NextRequest;
+import com.as3mxml.vscode.debug.requests.PauseRequest;
 import com.as3mxml.vscode.debug.requests.ScopesRequest;
 import com.as3mxml.vscode.debug.requests.SetBreakpointsRequest;
 import com.as3mxml.vscode.debug.requests.Source;
 import com.as3mxml.vscode.debug.requests.SourceBreakpoint;
 import com.as3mxml.vscode.debug.requests.StackTraceRequest;
+import com.as3mxml.vscode.debug.requests.StepInRequest;
+import com.as3mxml.vscode.debug.requests.StepOutRequest;
 import com.as3mxml.vscode.debug.requests.VariablesRequest;
 import com.as3mxml.vscode.debug.responses.Breakpoint;
 import com.as3mxml.vscode.debug.responses.Capabilities;
@@ -103,6 +109,7 @@ import flash.tools.debugger.events.DebugEvent;
 import flash.tools.debugger.events.ExceptionFault;
 import flash.tools.debugger.events.FaultEvent;
 import flash.tools.debugger.events.IsolateCreateEvent;
+import flash.tools.debugger.events.IsolateExitEvent;
 import flash.tools.debugger.events.TraceEvent;
 import flash.tools.debugger.expression.ASTBuilder;
 import flash.tools.debugger.expression.NoSuchVariableException;
@@ -130,6 +137,7 @@ public class SWFDebugSession extends DebugSession {
     private static final String PLATFORM_IOS = "ios";
     private static final long LOCAL_VARIABLES_REFERENCE = 1;
     private ThreadSafeSession swfSession;
+    private List<Isolate> isolates = new ArrayList<>();
     private Process swfRunProcess;
     private java.lang.Thread sessionThread;
     private boolean cancelRunner = false;
@@ -193,7 +201,6 @@ public class SWFDebugSession extends DebugSession {
 
     private class SessionRunner implements Runnable {
         private boolean initialized = false;
-        private List<Isolate> isolates = new ArrayList<>();
 
         public SessionRunner() {
         }
@@ -289,6 +296,21 @@ public class SWFDebugSession extends DebugSession {
                 isolates.add(isolate);
                 IsolateSession session = swfSession.getWorkerSession(isolate.getId());
                 session.resume();
+
+                ThreadEvent.ThreadBody body = new ThreadEvent.ThreadBody();
+                body.reason = ThreadEvent.REASON_STARTED;
+                body.threadID = isolate.getId();
+                sendEvent(new ThreadEvent(body));
+            } else if (event instanceof IsolateExitEvent) {
+                //a worker has exited
+                IsolateExitEvent isolateEvent = (IsolateExitEvent) event;
+                Isolate isolate = isolateEvent.isolate;
+                isolates.remove(isolate);
+
+                ThreadEvent.ThreadBody body = new ThreadEvent.ThreadBody();
+                body.reason = ThreadEvent.REASON_EXITED;
+                body.threadID = isolate.getId();
+                sendEvent(new ThreadEvent(body));
             }
             return false;
         }
@@ -969,15 +991,20 @@ public class SWFDebugSession extends DebugSession {
         sendResponse(response);
     }
 
-    public void continueCommand(Response response, Request.RequestArguments arguments) {
+    public void continueCommand(Response response, ContinueRequest.ContinueArguments arguments) {
         try {
-            if (!swfSession.isSuspended()) {
+            if (arguments.threadId == Isolate.DEFAULT_ID) {
+                if (!swfSession.isSuspended()) {
+                    response.success = false;
+                    sendResponse(response);
+                    return;
+                }
+                swfSession.resume();
+                stopWaitingForResume();
+            } else {
+                // worker
                 response.success = false;
-                sendResponse(response);
-                return;
             }
-            swfSession.resume();
-            stopWaitingForResume();
         } catch (NotSuspendedException e) {
             response.success = false;
         } catch (NoResponseException e) {
@@ -992,15 +1019,20 @@ public class SWFDebugSession extends DebugSession {
         sendResponse(response);
     }
 
-    public void next(Response response, Request.RequestArguments arguments) {
+    public void next(Response response, NextRequest.NextArguments arguments) {
         try {
-            if (!swfSession.isSuspended()) {
+            if (arguments.threadId == Isolate.DEFAULT_ID) {
+                if (!swfSession.isSuspended()) {
+                    response.success = false;
+                    sendResponse(response);
+                    return;
+                }
+                swfSession.stepOver();
+                stopWaitingForResume();
+            } else {
+                // worker
                 response.success = false;
-                sendResponse(response);
-                return;
             }
-            swfSession.stepOver();
-            stopWaitingForResume();
         } catch (NotSuspendedException e) {
             response.success = false;
         } catch (NoResponseException e) {
@@ -1015,15 +1047,20 @@ public class SWFDebugSession extends DebugSession {
         sendResponse(response);
     }
 
-    public void stepIn(Response response, Request.RequestArguments arguments) {
+    public void stepIn(Response response, StepInRequest.StepInArguments arguments) {
         try {
-            if (!swfSession.isSuspended()) {
+            if (arguments.threadId == Isolate.DEFAULT_ID) {
+                if (!swfSession.isSuspended()) {
+                    response.success = false;
+                    sendResponse(response);
+                    return;
+                }
+                swfSession.stepInto();
+                stopWaitingForResume();
+            } else {
+                // worker
                 response.success = false;
-                sendResponse(response);
-                return;
             }
-            swfSession.stepInto();
-            stopWaitingForResume();
         } catch (NotSuspendedException e) {
             response.success = false;
         } catch (NoResponseException e) {
@@ -1038,15 +1075,20 @@ public class SWFDebugSession extends DebugSession {
         sendResponse(response);
     }
 
-    public void stepOut(Response response, Request.RequestArguments arguments) {
+    public void stepOut(Response response, StepOutRequest.StepOutArguments arguments) {
         try {
-            if (!swfSession.isSuspended()) {
+            if (arguments.threadId == Isolate.DEFAULT_ID) {
+                if (!swfSession.isSuspended()) {
+                    response.success = false;
+                    sendResponse(response);
+                    return;
+                }
+                swfSession.stepOut();
+                stopWaitingForResume();
+            } else {
+                // worker
                 response.success = false;
-                sendResponse(response);
-                return;
             }
-            swfSession.stepOut();
-            stopWaitingForResume();
         } catch (NotSuspendedException e) {
             response.success = false;
         } catch (NoResponseException e) {
@@ -1061,15 +1103,20 @@ public class SWFDebugSession extends DebugSession {
         sendResponse(response);
     }
 
-    public void pause(Response response, Request.RequestArguments arguments) {
+    public void pause(Response response, PauseRequest.PauseArguments arguments) {
         try {
-            if (swfSession.isSuspended()) {
+            if (arguments.threadId == Isolate.DEFAULT_ID) {
+                if (swfSession.isSuspended()) {
+                    response.success = false;
+                    sendResponse(response);
+                    return;
+                }
+                swfSession.suspend();
+                stopWaitingForResume();
+            } else {
+                // worker
                 response.success = false;
-                sendResponse(response);
-                return;
             }
-            swfSession.suspend();
-            stopWaitingForResume();
         } catch (NoResponseException e) {
             response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
@@ -1214,6 +1261,9 @@ public class SWFDebugSession extends DebugSession {
     public void threads(Response response, Request.RequestArguments arguments) {
         List<Thread> threads = new ArrayList<>();
         threads.add(new Thread(Isolate.DEFAULT_ID, "Main SWF"));
+        for (Isolate isolate : isolates) {
+            threads.add(new Thread(isolate.getId(), "Worker " + isolate.getId()));
+        }
         sendResponse(response, new ThreadsResponseBody(threads));
     }
 

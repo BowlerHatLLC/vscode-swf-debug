@@ -13,21 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package com.as3mxml.vscode.debug.events;
+package com.as3mxml.vscode.debug.requests;
 
-import com.as3mxml.vscode.debug.protocol.Event;
+import com.as3mxml.vscode.debug.protocol.Request;
 
-public class ThreadEvent extends Event<ThreadEvent.ThreadBody> {
-    public static String EVENT_TYPE = "thread";
-    public static String REASON_STARTED = "started";
-    public static String REASON_EXITED = "exited";
+public class StepInRequest extends Request {
+	public static final String REQUEST_COMMAND = "stepIn";
 
-    public ThreadEvent(ThreadEvent.ThreadBody body) {
-        super(EVENT_TYPE, body);
-    }
+	public StepInRequest.StepInArguments arguments;
 
-    public static class ThreadBody extends Event.EventBody {
-        public String reason;
-        public int threadID;
-    }
+	public static class StepInArguments extends Request.RequestArguments {
+		public int threadId;
+	}
 }

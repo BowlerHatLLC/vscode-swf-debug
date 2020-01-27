@@ -31,13 +31,18 @@ import com.as3mxml.vscode.debug.protocol.ProtocolServer;
 import com.as3mxml.vscode.debug.protocol.Request;
 import com.as3mxml.vscode.debug.protocol.Response;
 import com.as3mxml.vscode.debug.requests.AttachRequest;
+import com.as3mxml.vscode.debug.requests.ContinueRequest;
 import com.as3mxml.vscode.debug.requests.EvaluateRequest;
 import com.as3mxml.vscode.debug.requests.ExceptionInfoRequest;
 import com.as3mxml.vscode.debug.requests.InitializeRequest;
 import com.as3mxml.vscode.debug.requests.LaunchRequest;
+import com.as3mxml.vscode.debug.requests.NextRequest;
+import com.as3mxml.vscode.debug.requests.PauseRequest;
 import com.as3mxml.vscode.debug.requests.ScopesRequest;
 import com.as3mxml.vscode.debug.requests.SetBreakpointsRequest;
 import com.as3mxml.vscode.debug.requests.StackTraceRequest;
+import com.as3mxml.vscode.debug.requests.StepInRequest;
+import com.as3mxml.vscode.debug.requests.StepOutRequest;
 import com.as3mxml.vscode.debug.requests.VariablesRequest;
 import com.as3mxml.vscode.debug.responses.ErrorResponseBody;
 import com.as3mxml.vscode.debug.responses.Message;
@@ -94,15 +99,15 @@ public abstract class DebugSession extends ProtocolServer {
 
         try {
             switch (command) {
-            case "initialize": {
+            case InitializeRequest.REQUEST_COMMAND: {
                 initialize(response, (InitializeRequest.InitializeRequestArguments) arguments);
                 break;
             }
-            case "launch": {
+            case LaunchRequest.REQUEST_COMMAND: {
                 launch(response, (LaunchRequest.LaunchRequestArguments) arguments);
                 break;
             }
-            case "attach": {
+            case AttachRequest.REQUEST_COMMAND: {
                 attach(response, (AttachRequest.AttachRequestArguments) arguments);
                 break;
             }
@@ -110,35 +115,35 @@ public abstract class DebugSession extends ProtocolServer {
                 disconnect(response, arguments);
                 break;
             }
-            case "next": {
-                next(response, arguments);
+            case NextRequest.REQUEST_COMMAND: {
+                next(response, (NextRequest.NextArguments) arguments);
                 break;
             }
-            case "continue": {
-                continueCommand(response, arguments);
+            case ContinueRequest.REQUEST_COMMAND: {
+                continueCommand(response, (ContinueRequest.ContinueArguments) arguments);
                 break;
             }
-            case "stepIn": {
-                stepIn(response, arguments);
+            case StepInRequest.REQUEST_COMMAND: {
+                stepIn(response, (StepInRequest.StepInArguments) arguments);
                 break;
             }
-            case "stepOut": {
-                stepOut(response, arguments);
+            case StepOutRequest.REQUEST_COMMAND: {
+                stepOut(response, (StepOutRequest.StepOutArguments) arguments);
                 break;
             }
-            case "pause": {
-                pause(response, arguments);
+            case PauseRequest.REQUEST_COMMAND: {
+                pause(response, (PauseRequest.PauseArguments) arguments);
                 break;
             }
-            case "stackTrace": {
+            case StackTraceRequest.REQUEST_COMMAND: {
                 stackTrace(response, (StackTraceRequest.StackTraceArguments) arguments);
                 break;
             }
-            case "scopes": {
+            case ScopesRequest.REQUEST_COMMAND: {
                 scopes(response, (ScopesRequest.ScopesArguments) arguments);
                 break;
             }
-            case "variables": {
+            case VariablesRequest.REQUEST_COMMAND: {
                 variables(response, (VariablesRequest.VariablesArguments) arguments);
                 break;
             }
@@ -150,7 +155,7 @@ public abstract class DebugSession extends ProtocolServer {
                 threads(response, arguments);
                 break;
             }
-            case "setBreakpoints": {
+            case SetBreakpointsRequest.REQUEST_COMMAND: {
                 setBreakpoints(response, (SetBreakpointsRequest.SetBreakpointsArguments) arguments);
                 break;
             }
@@ -158,11 +163,11 @@ public abstract class DebugSession extends ProtocolServer {
                 setExceptionBreakpoints(response, arguments);
                 break;
             }
-            case "evaluate": {
+            case EvaluateRequest.REQUEST_COMMAND: {
                 evaluate(response, (EvaluateRequest.EvaluateArguments) arguments);
                 break;
             }
-            case "exceptionInfo": {
+            case ExceptionInfoRequest.REQUEST_COMMAND: {
                 exceptionInfo(response, (ExceptionInfoRequest.ExceptionInfoArguments) arguments);
                 break;
             }
@@ -207,15 +212,15 @@ public abstract class DebugSession extends ProtocolServer {
 
     public abstract void setExceptionBreakpoints(Response response, Request.RequestArguments arguments);
 
-    public abstract void continueCommand(Response response, Request.RequestArguments arguments);
+    public abstract void continueCommand(Response response, ContinueRequest.ContinueArguments arguments);
 
-    public abstract void next(Response response, Request.RequestArguments arguments);
+    public abstract void next(Response response, NextRequest.NextArguments arguments);
 
-    public abstract void stepIn(Response response, Request.RequestArguments arguments);
+    public abstract void stepIn(Response response, StepInRequest.StepInArguments arguments);
 
-    public abstract void stepOut(Response response, Request.RequestArguments arguments);
+    public abstract void stepOut(Response response, StepOutRequest.StepOutArguments arguments);
 
-    public abstract void pause(Response response, Request.RequestArguments arguments);
+    public abstract void pause(Response response, PauseRequest.PauseArguments arguments);
 
     public abstract void stackTrace(Response response, StackTraceRequest.StackTraceArguments arguments);
 
@@ -357,6 +362,21 @@ public abstract class DebugSession extends ProtocolServer {
             }
             case ExceptionInfoRequest.REQUEST_COMMAND: {
                 return gson.fromJson(je, ExceptionInfoRequest.class);
+            }
+            case PauseRequest.REQUEST_COMMAND: {
+                return gson.fromJson(je, PauseRequest.class);
+            }
+            case ContinueRequest.REQUEST_COMMAND: {
+                return gson.fromJson(je, ContinueRequest.class);
+            }
+            case NextRequest.REQUEST_COMMAND: {
+                return gson.fromJson(je, NextRequest.class);
+            }
+            case StepInRequest.REQUEST_COMMAND: {
+                return gson.fromJson(je, StepInRequest.class);
+            }
+            case StepOutRequest.REQUEST_COMMAND: {
+                return gson.fromJson(je, StepOutRequest.class);
             }
             }
             Gson newGson = new Gson();

@@ -22,7 +22,7 @@ public class EvaluateRequest extends Request {
 
     public EvaluateRequest.EvaluateArguments arguments;
 
-    public class EvaluateArguments extends Request.RequestArguments {
+    public static class EvaluateArguments extends Request.RequestArguments {
         /** The expression to evaluate. */
         public String expression;
 
