@@ -137,7 +137,7 @@ public class SWFDebugSession extends DebugSession {
     private static final String PLATFORM_IOS = "ios";
     private static final long LOCAL_VARIABLES_REFERENCE = 1;
     private ThreadSafeSession swfSession;
-    private List<Isolate> isolates = new ArrayList<>();
+    private List<IsolateWithState> isolates = new ArrayList<>();
     private Process swfRunProcess;
     private java.lang.Thread sessionThread;
     private boolean cancelRunner = false;
@@ -154,6 +154,15 @@ public class SWFDebugSession extends DebugSession {
     private int nextBreakpointID = 1;
     private String forwardedPortPlatform = null;
     private int forwardedPort = -1;
+
+    private class IsolateWithState {
+        public IsolateWithState(Isolate isolate) {
+            this.isolate = isolate;
+        }
+
+        public Isolate isolate;
+        public boolean waiting = false;
+    }
 
     private class PendingBreakpoints {
         public PendingBreakpoints(SourceBreakpoint[] breakpoints) {
@@ -220,17 +229,12 @@ public class SWFDebugSession extends DebugSession {
                     }
                     while (swfSession.isSuspended() && !waitingForResume) {
                         handleSuspended(logPoint);
-                        break;
                     }
-                    for (Isolate isolate : isolates) {
+                    for (IsolateWithState isolateWithState : isolates) {
+                        Isolate isolate = isolateWithState.isolate;
                         IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
-                        while (isolateSession.isSuspended()) {
-                            switch (isolateSession.suspendReason()) {
-                            default: {
-                                sendOutputEvent("Unknown isolate suspend reason: " + swfSession.suspendReason() + "\n");
-                                break;
-                            }
-                            }
+                        while (isolateSession.isSuspended() && !isolateWithState.waiting) {
+                            handleIsolateSuspended(isolateWithState);
                         }
                     }
                 } catch (NotConnectedException e) {
@@ -293,7 +297,8 @@ public class SWFDebugSession extends DebugSession {
                 //a worker has been created
                 IsolateCreateEvent isolateEvent = (IsolateCreateEvent) event;
                 Isolate isolate = isolateEvent.isolate;
-                isolates.add(isolate);
+                IsolateWithState isolateWithState = new IsolateWithState(isolate);
+                isolates.add(isolateWithState);
                 IsolateSession session = swfSession.getWorkerSession(isolate.getId());
                 session.resume();
 
@@ -305,7 +310,7 @@ public class SWFDebugSession extends DebugSession {
                 //a worker has exited
                 IsolateExitEvent isolateEvent = (IsolateExitEvent) event;
                 Isolate isolate = isolateEvent.isolate;
-                isolates.remove(isolate);
+                isolates.removeIf((isolateWithState) -> isolate.equals(isolateWithState.isolate));
 
                 ThreadEvent.ThreadBody body = new ThreadEvent.ThreadBody();
                 body.reason = ThreadEvent.REASON_EXITED;
@@ -364,6 +369,27 @@ public class SWFDebugSession extends DebugSession {
             if (body != null) {
                 waitingForResume = true;
                 body.threadId = Isolate.DEFAULT_ID;
+                sendEvent(new StoppedEvent(body));
+            }
+        }
+
+        private void handleIsolateSuspended(IsolateWithState isolateWithState)
+                throws NotConnectedException, NoResponseException, NotSuspendedException {
+            Isolate isolate = isolateWithState.isolate;
+            IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+
+            StoppedEvent.StoppedBody body = null;
+            switch (isolateSession.suspendReason()) {
+            default: {
+                body = new StoppedEvent.StoppedBody();
+                body.reason = StoppedEvent.REASON_UNKNOWN;
+                sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + " for isolate with ID: "
+                        + isolate.getId() + "\n");
+            }
+            }
+            if (body != null) {
+                isolateWithState.waiting = true;
+                body.threadId = isolate.getId();
                 sendEvent(new StoppedEvent(body));
             }
         }
@@ -1261,7 +1287,8 @@ public class SWFDebugSession extends DebugSession {
     public void threads(Response response, Request.RequestArguments arguments) {
         List<Thread> threads = new ArrayList<>();
         threads.add(new Thread(Isolate.DEFAULT_ID, "Main SWF"));
-        for (Isolate isolate : isolates) {
+        for (IsolateWithState isolateWithState : isolates) {
+            Isolate isolate = isolateWithState.isolate;
             threads.add(new Thread(isolate.getId(), "Worker " + isolate.getId()));
         }
         sendResponse(response, new ThreadsResponseBody(threads));
