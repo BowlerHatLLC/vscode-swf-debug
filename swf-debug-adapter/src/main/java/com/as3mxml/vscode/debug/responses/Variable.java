@@ -42,6 +42,16 @@ public class Variable {
     public Long variablesReference = 0L;
 
     /**
+     * The number of named child variables.
+     */
+    public Integer namedVariables = null;
+
+    /**
+     * The number of indexed child variables.
+     */
+    public Integer indexedVariables = null;
+
+    /**
      * Properties of a variable that can be used to determine how to render the variable in the UI.
      */
     public VariablePresentationHint presentationHint;

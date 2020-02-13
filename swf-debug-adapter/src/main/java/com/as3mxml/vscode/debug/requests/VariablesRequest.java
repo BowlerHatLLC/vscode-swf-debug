@@ -20,9 +20,13 @@ import com.as3mxml.vscode.debug.protocol.Request;
 public class VariablesRequest extends Request {
     public static final String REQUEST_COMMAND = "variables";
 
+    public static final String FILTER_NAMED = "named";
+    public static final String FILTER_INDEXED = "indexed";
+
     public VariablesRequest.VariablesArguments arguments;
 
     public class VariablesArguments extends Request.RequestArguments {
         public long variablesReference;
+        public String filter;
     }
 }
