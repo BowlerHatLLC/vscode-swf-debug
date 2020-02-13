@@ -247,7 +247,7 @@ public class SWFDebugSession extends DebugSession {
                 } catch (Exception e) {
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
-                    sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+                    sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
                 }
                 try {
                     java.lang.Thread.sleep(50);
@@ -413,7 +413,9 @@ public class SWFDebugSession extends DebugSession {
                     }
                 }
             } catch (NotConnectedException e) {
-                sendOutputEvent("Not connected\n");
+                StringWriter writer = new StringWriter();
+                e.printStackTrace(new PrintWriter(writer));
+                sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
                 return;
             }
         }
@@ -720,14 +722,18 @@ public class SWFDebugSession extends DebugSession {
         sendEvent(new OutputEvent(body));
     }
 
+    private void sendErrorOutputEvent(String message) {
+        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+        body.output = message;
+        body.category = OutputEvent.CATEGORY_STDERR;
+        sendEvent(new OutputEvent(body));
+    }
+
     private boolean uninstallApp(Path workspacePath, String platform, String applicationID) {
         DeviceCommandResult uninstallResult = DeviceInstallUtils.runUninstallCommand(platform, applicationID,
                 workspacePath, adtPath);
         if (uninstallResult.error) {
-            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-            body.category = "stderr";
-            body.output = uninstallResult.message + "\n";
-            sendEvent(new OutputEvent(body));
+            sendErrorOutputEvent(uninstallResult.message + "\n");
             return false;
         }
         return true;
@@ -738,10 +744,7 @@ public class SWFDebugSession extends DebugSession {
         DeviceCommandResult installResult = DeviceInstallUtils.runInstallCommand(platform, bundlePath, workspacePath,
                 adtPath);
         if (installResult.error) {
-            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-            body.category = "stderr";
-            body.output = installResult.message + "\n";
-            sendEvent(new OutputEvent(body));
+            sendErrorOutputEvent(installResult.message + "\n");
             return false;
         }
         return true;
@@ -752,10 +755,7 @@ public class SWFDebugSession extends DebugSession {
         DeviceCommandResult forwardPortResult = DeviceInstallUtils.forwardPortCommand(platform, port, workspacePath,
                 adbPath, idbPath);
         if (forwardPortResult.error) {
-            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-            body.category = "stderr";
-            body.output = forwardPortResult.message + "\n";
-            sendEvent(new OutputEvent(body));
+            sendErrorOutputEvent(forwardPortResult.message + "\n");
             return false;
         }
         forwardedPort = port;
@@ -780,10 +780,7 @@ public class SWFDebugSession extends DebugSession {
         DeviceCommandResult launchResult = DeviceInstallUtils.runLaunchCommand(platform, applicationID, workspacePath,
                 adtPath);
         if (launchResult.error) {
-            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-            body.category = "stderr";
-            body.output = launchResult.message + "\n";
-            sendEvent(new OutputEvent(body));
+            sendErrorOutputEvent(launchResult.message + "\n");
             return false;
         }
         sendOutputEvent("\033[0;92mInstallation and launch completed successfully.\u001B[0m\n");
@@ -808,7 +805,7 @@ public class SWFDebugSession extends DebugSession {
             success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         if (response.success) {
             try {
@@ -816,14 +813,14 @@ public class SWFDebugSession extends DebugSession {
             } catch (VersionException e) {
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
-                sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+                sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
             }
             try {
                 manager.stopListening();
             } catch (IOException e) {
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
-                sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+                sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
             }
 
             cancelRunner = false;
@@ -901,11 +898,11 @@ public class SWFDebugSession extends DebugSession {
         } catch (InProgressException e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         } catch (NoResponseException e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         if (foundSourceFile == null && !badExtension) {
             //the file was not found, but it has a supported extension,
@@ -928,11 +925,11 @@ public class SWFDebugSession extends DebugSession {
         } catch (NoResponseException e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         } catch (NotConnectedException e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         List<Breakpoint> result = new ArrayList<>();
         for (int i = 0, count = breakpoints.length; i < count; i++) {
@@ -969,12 +966,12 @@ public class SWFDebugSession extends DebugSession {
                 } catch (NoResponseException e) {
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
-                    sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+                    sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
                     responseBreakpoint.verified = false;
                 } catch (NotConnectedException e) {
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
-                    sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+                    sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
                     responseBreakpoint.verified = false;
                 }
             }
@@ -1038,15 +1035,15 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NotSuspendedException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (NoResponseException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -1067,15 +1064,15 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NotSuspendedException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (NoResponseException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -1096,15 +1093,15 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NotSuspendedException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (NoResponseException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -1125,15 +1122,15 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NotSuspendedException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (NoResponseException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
@@ -1154,12 +1151,12 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NoResponseException e) {
             response.success = false;
-            sendOutputEvent(e.getMessage() + "\n");
+            sendErrorOutputEvent(e.getMessage() + "\n");
         } catch (Exception e) {
             response.success = false;
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
-            sendOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         sendResponse(response);
     }
