@@ -87,9 +87,11 @@ public class SWFExpressionContext implements Context {
 		} catch (Exception e) {
 			throw new NoSuchVariableException(o);
 		}
-		for (Variable member : members) {
-			if (member.getName().equals(memberName)) {
-				return member;
+		if (members != null) {
+			for (Variable member : members) {
+				if (member.getName().equals(memberName)) {
+					return member;
+				}
 			}
 		}
 		throw new NoSuchVariableException(o);
@@ -121,9 +123,33 @@ public class SWFExpressionContext implements Context {
 	}
 
 	public void assign(Object o, Value v) throws NoSuchVariableException, PlayerFaultException {
+
+		Variable variable = null;
+		if (o instanceof Variable) {
+			variable = (Variable) o;
+		} else {
+			if (frameOrVariable != null) {
+				try {
+					variable = (Variable) lookup(o);
+				} catch (NoSuchVariableException e) {
+				}
+			}
+		}
+		if (variable == null) {
+			return;
+		}
+		try {
+			variable.setValue(swfSession, v.getType(), v.getValueAsString());
+		} catch (NotConnectedException e) {
+			return;
+		} catch (NoResponseException e) {
+			return;
+		} catch (NotSuspendedException e) {
+			return;
+		}
 	}
 
-	public void createPseudoVariables(boolean oui) {
+	public void createPseudoVariables(boolean create) {
 	}
 
 	public Value toValue(Object o) {
