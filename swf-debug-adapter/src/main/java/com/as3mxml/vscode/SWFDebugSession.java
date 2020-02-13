@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.as3mxml.vscode.debug.DebugSession;
 import com.as3mxml.vscode.debug.events.BreakpointEvent;
@@ -462,6 +463,7 @@ public class SWFDebugSession extends DebugSession {
         Capabilities capabilities = new Capabilities();
         capabilities.supportsExceptionInfoRequest = true;
         capabilities.supportsLogPoints = true;
+        capabilities.supportsSetVariable = true;
         sendResponse(response, capabilities);
     }
 
@@ -1320,10 +1322,80 @@ public class SWFDebugSession extends DebugSession {
         return members;
     }
 
-    public void setVariable(Response response, SetVariableRequest.SetVariableArguments arguments) {
+    private flash.tools.debugger.Variable getMemberByName(int frameId, long variablesReference, String name)
+            throws PlayerDebugException {
+        flash.tools.debugger.Variable[] members = getMembersForFrameIdAndVariablesReference(frameId,
+                variablesReference);
+        if (members != null) {
+            for (flash.tools.debugger.Variable member : members) {
+                if (member.getName().equals(name)) {
+                    return member;
+                }
+            }
+        }
+        return null;
+    }
 
+    public void setVariable(Response response, SetVariableRequest.SetVariableArguments arguments) {
+        long variablesReference = arguments.variablesReference;
+        int frameId = -1;
+        if (variablesReference < 1000) {
+            frameId = (int) variablesReference / 10;
+            variablesReference -= frameId * 10;
+        }
+
+        try {
+            flash.tools.debugger.Variable member = getMemberByName(frameId, variablesReference, arguments.name);
+            if (member != null) {
+                Value memberValue = member.getValue();
+                FaultEvent faultEvent = null;
+                boolean setValue = true;
+                String rawValue = arguments.value;
+                if (Boolean.TRUE.toString().equals(rawValue) || Boolean.FALSE.toString().equals(rawValue)) {
+                    faultEvent = member.setValue(swfSession, VariableType.BOOLEAN, rawValue);
+                } else if (Pattern.compile("[0-9]*(\\.[0-9+])?").matcher(rawValue).matches()) {
+                    faultEvent = member.setValue(swfSession, VariableType.NUMBER, rawValue);
+                } else if (rawValue.startsWith("\"") && rawValue.endsWith("\"")) {
+                    rawValue = rawValue.substring(1, rawValue.length() - 1);
+                    faultEvent = member.setValue(swfSession, VariableType.STRING, rawValue);
+                } else {
+                    setValue = false;
+                }
+                setValue = setValue && faultEvent == null;
+
+                if (setValue) {
+                    //need to get it again to access the new value
+                    member = getMemberByName(frameId, variablesReference, arguments.name);
+                    memberValue = member.getValue();
+                    SetVariableResponseBody body = new SetVariableResponseBody();
+                    body.type = memberValue.getTypeName();
+                    long id = memberValue.getId();
+                    if (id != Value.UNKNOWN_ID) {
+                        body.value = memberValue.getTypeName();
+                        body.variablesReference = memberValue.getId();
+                    } else {
+                        if (memberValue.getType() == VariableType.STRING) {
+                            body.value = "\"" + memberValue.getValueAsString() + "\"";
+                        } else {
+                            body.value = memberValue.getValueAsString();
+                        }
+                    }
+                    sendResponse(response, body);
+                    return;
+                } else {
+                    if (faultEvent != null && faultEvent.information != null) {
+                        response.message = faultEvent.information;
+                    } else {
+                        response.message = "Failed to set value of '" + arguments.name + "'";
+                    }
+                }
+            }
+        } catch (PlayerDebugException e) {
+
+        }
         response.success = false;
-        sendResponse(response, new SetVariableResponseBody());
+        sendResponse(response);
+
     }
 
     public void threads(Response response, Request.RequestArguments arguments) {
