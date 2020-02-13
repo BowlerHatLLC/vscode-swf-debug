@@ -74,6 +74,7 @@ import com.as3mxml.vscode.debug.responses.StackTraceResponseBody;
 import com.as3mxml.vscode.debug.responses.Thread;
 import com.as3mxml.vscode.debug.responses.ThreadsResponseBody;
 import com.as3mxml.vscode.debug.responses.Variable;
+import com.as3mxml.vscode.debug.responses.VariablePresentationHint;
 import com.as3mxml.vscode.debug.responses.VariablesResponseBody;
 import com.as3mxml.vscode.debug.utils.DeviceInstallUtils;
 import com.as3mxml.vscode.debug.utils.DeviceInstallUtils.DeviceCommandResult;
@@ -1276,6 +1277,33 @@ public class SWFDebugSession extends DebugSession {
                         variable.value = memberValue.getValueAsString();
                     }
                 }
+                VariablePresentationHint presentationHint = new VariablePresentationHint();
+                if ((member.getAttributes() & VariableAttribute.PUBLIC_SCOPE) == VariableAttribute.PUBLIC_SCOPE) {
+                    presentationHint.visibility = VariablePresentationHint.VISIBILITY_PUBLIC;
+                } else if ((member.getAttributes()
+                        & VariableAttribute.PRIVATE_SCOPE) == VariableAttribute.PRIVATE_SCOPE) {
+                    presentationHint.visibility = VariablePresentationHint.VISIBILITY_PRIVATE;
+                } else if ((member.getAttributes()
+                        & VariableAttribute.PROTECTED_SCOPE) == VariableAttribute.PROTECTED_SCOPE) {
+                    presentationHint.visibility = VariablePresentationHint.VISIBILITY_PROTECTED;
+                } else if ((member.getAttributes()
+                        & VariableAttribute.INTERNAL_SCOPE) == VariableAttribute.INTERNAL_SCOPE) {
+                    presentationHint.visibility = VariablePresentationHint.VISIBILITY_INTERNAL;
+                }
+                List<String> attributes = new ArrayList<>();
+                if ((member.getAttributes() & VariableAttribute.IS_STATIC) == VariableAttribute.IS_STATIC) {
+                    attributes.add(VariablePresentationHint.ATTRIBUTES_STATIC);
+                }
+                if ((member.getAttributes() & VariableAttribute.IS_CONST) == VariableAttribute.IS_CONST) {
+                    attributes.add(VariablePresentationHint.ATTRIBUTES_CONSTANT);
+                }
+                if ((member.getAttributes() & VariableAttribute.READ_ONLY) == VariableAttribute.READ_ONLY) {
+                    attributes.add(VariablePresentationHint.ATTRIBUTES_READ_ONLY);
+                }
+                if (attributes.size() > 0) {
+                    presentationHint.attributes = attributes.toArray(new String[attributes.size()]);
+                }
+                variable.presentationHint = presentationHint;
                 variables.add(variable);
             }
         } catch (PlayerDebugException e) {

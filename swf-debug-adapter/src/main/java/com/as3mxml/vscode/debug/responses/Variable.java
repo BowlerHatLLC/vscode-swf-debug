@@ -40,4 +40,9 @@ public class Variable {
      * If variablesReference is > 0, the variable is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
      */
     public Long variablesReference = 0L;
+
+    /**
+     * Properties of a variable that can be used to determine how to render the variable in the UI.
+     */
+    public VariablePresentationHint presentationHint;
 }
