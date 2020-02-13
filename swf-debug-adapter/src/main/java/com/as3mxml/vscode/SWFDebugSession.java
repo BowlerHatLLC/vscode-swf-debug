@@ -1038,6 +1038,7 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NotSuspendedException e) {
             response.success = false;
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (NoResponseException e) {
             response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
@@ -1066,6 +1067,7 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NotSuspendedException e) {
             response.success = false;
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (NoResponseException e) {
             response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
@@ -1094,6 +1096,7 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NotSuspendedException e) {
             response.success = false;
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (NoResponseException e) {
             response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
@@ -1122,6 +1125,7 @@ public class SWFDebugSession extends DebugSession {
             }
         } catch (NotSuspendedException e) {
             response.success = false;
+            sendOutputEvent(e.getMessage() + "\n");
         } catch (NoResponseException e) {
             response.success = false;
             sendOutputEvent(e.getMessage() + "\n");
