@@ -40,6 +40,7 @@ import com.as3mxml.vscode.debug.requests.NextRequest;
 import com.as3mxml.vscode.debug.requests.PauseRequest;
 import com.as3mxml.vscode.debug.requests.ScopesRequest;
 import com.as3mxml.vscode.debug.requests.SetBreakpointsRequest;
+import com.as3mxml.vscode.debug.requests.SetVariableRequest;
 import com.as3mxml.vscode.debug.requests.StackTraceRequest;
 import com.as3mxml.vscode.debug.requests.StepInRequest;
 import com.as3mxml.vscode.debug.requests.StepOutRequest;
@@ -171,6 +172,10 @@ public abstract class DebugSession extends ProtocolServer {
                 exceptionInfo(response, (ExceptionInfoRequest.ExceptionInfoArguments) arguments);
                 break;
             }
+            case SetVariableRequest.REQUEST_COMMAND: {
+                setVariable(response, (SetVariableRequest.SetVariableArguments) arguments);
+                break;
+            }
             default: {
                 System.err.println("unknown request command: " + command);
                 HashMap<String, Object> errorArgs = new HashMap<>();
@@ -227,6 +232,8 @@ public abstract class DebugSession extends ProtocolServer {
     public abstract void scopes(Response response, ScopesRequest.ScopesArguments arguments);
 
     public abstract void variables(Response response, VariablesRequest.VariablesArguments arguments);
+
+    public abstract void setVariable(Response response, SetVariableRequest.SetVariableArguments arguments);
 
     public void source(Response response, Request.RequestArguments arguments) {
         sendErrorResponse(response, 1020, "Source not supported");
@@ -377,6 +384,9 @@ public abstract class DebugSession extends ProtocolServer {
             }
             case StepOutRequest.REQUEST_COMMAND: {
                 return gson.fromJson(je, StepOutRequest.class);
+            }
+            case SetVariableRequest.REQUEST_COMMAND: {
+                return gson.fromJson(je, SetVariableRequest.class);
             }
             }
             Gson newGson = new Gson();

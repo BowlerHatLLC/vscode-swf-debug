@@ -55,6 +55,7 @@ import com.as3mxml.vscode.debug.requests.NextRequest;
 import com.as3mxml.vscode.debug.requests.PauseRequest;
 import com.as3mxml.vscode.debug.requests.ScopesRequest;
 import com.as3mxml.vscode.debug.requests.SetBreakpointsRequest;
+import com.as3mxml.vscode.debug.requests.SetVariableRequest;
 import com.as3mxml.vscode.debug.requests.Source;
 import com.as3mxml.vscode.debug.requests.SourceBreakpoint;
 import com.as3mxml.vscode.debug.requests.StackTraceRequest;
@@ -69,6 +70,7 @@ import com.as3mxml.vscode.debug.responses.ExceptionInfoResponseBody;
 import com.as3mxml.vscode.debug.responses.Scope;
 import com.as3mxml.vscode.debug.responses.ScopesResponseBody;
 import com.as3mxml.vscode.debug.responses.SetBreakpointsResponseBody;
+import com.as3mxml.vscode.debug.responses.SetVariableResponseBody;
 import com.as3mxml.vscode.debug.responses.StackFrame;
 import com.as3mxml.vscode.debug.responses.StackTraceResponseBody;
 import com.as3mxml.vscode.debug.responses.Thread;
@@ -1214,39 +1216,14 @@ public class SWFDebugSession extends DebugSession {
     public void variables(Response response, VariablesRequest.VariablesArguments arguments) {
         List<Variable> variables = new ArrayList<>();
         try {
-            Value swfValue = null;
             long variablesReference = arguments.variablesReference;
             int frameId = -1;
             if (variablesReference < 1000) {
                 frameId = (int) variablesReference / 10;
                 variablesReference -= frameId * 10;
             }
-            flash.tools.debugger.Variable[] members = null;
-            if (variablesReference == LOCAL_VARIABLES_REFERENCE) {
-                Frame[] swfFrames = swfSession.getFrames();
-                if (frameId >= 0 && frameId < swfFrames.length) {
-                    Frame swfFrame = swfFrames[frameId];
-                    flash.tools.debugger.Variable[] args = swfFrame.getArguments(swfSession);
-                    flash.tools.debugger.Variable[] locals = swfFrame.getLocals(swfSession);
-                    flash.tools.debugger.Variable swfThis = swfFrame.getThis(swfSession);
-                    int memberCount = locals.length + args.length;
-                    int offset = 0;
-                    if (swfThis != null) {
-                        offset = 1;
-                    }
-                    members = new flash.tools.debugger.Variable[memberCount + offset];
-                    if (swfThis != null) {
-                        members[0] = swfThis;
-                    }
-                    System.arraycopy(args, 0, members, offset, args.length);
-                    System.arraycopy(locals, 0, members, args.length + offset, locals.length);
-                } else {
-                    members = new flash.tools.debugger.Variable[0];
-                }
-            } else {
-                swfValue = swfSession.getValue(arguments.variablesReference);
-                members = swfValue.getMembers(swfSession);
-            }
+            flash.tools.debugger.Variable[] members = getMembersForFrameIdAndVariablesReference(frameId,
+                    variablesReference);
             boolean isThis = false;
             Value swfThisValue = swfSession.getValue(Value.THIS_ID);
             if (swfThisValue != null) {
@@ -1310,6 +1287,43 @@ public class SWFDebugSession extends DebugSession {
             //ignore
         }
         sendResponse(response, new VariablesResponseBody(variables));
+    }
+
+    private flash.tools.debugger.Variable[] getMembersForFrameIdAndVariablesReference(int frameId,
+            long variablesReference) throws PlayerDebugException {
+        flash.tools.debugger.Variable[] members = null;
+        if (variablesReference == LOCAL_VARIABLES_REFERENCE) {
+            Frame[] swfFrames = swfSession.getFrames();
+            if (frameId >= 0 && frameId < swfFrames.length) {
+                Frame swfFrame = swfFrames[frameId];
+                flash.tools.debugger.Variable[] args = swfFrame.getArguments(swfSession);
+                flash.tools.debugger.Variable[] locals = swfFrame.getLocals(swfSession);
+                flash.tools.debugger.Variable swfThis = swfFrame.getThis(swfSession);
+                int memberCount = locals.length + args.length;
+                int offset = 0;
+                if (swfThis != null) {
+                    offset = 1;
+                }
+                members = new flash.tools.debugger.Variable[memberCount + offset];
+                if (swfThis != null) {
+                    members[0] = swfThis;
+                }
+                System.arraycopy(args, 0, members, offset, args.length);
+                System.arraycopy(locals, 0, members, args.length + offset, locals.length);
+            } else {
+                members = new flash.tools.debugger.Variable[0];
+            }
+        } else {
+            Value swfValue = swfSession.getValue(variablesReference);
+            members = swfValue.getMembers(swfSession);
+        }
+        return members;
+    }
+
+    public void setVariable(Response response, SetVariableRequest.SetVariableArguments arguments) {
+
+        response.success = false;
+        sendResponse(response, new SetVariableResponseBody());
     }
 
     public void threads(Response response, Request.RequestArguments arguments) {
