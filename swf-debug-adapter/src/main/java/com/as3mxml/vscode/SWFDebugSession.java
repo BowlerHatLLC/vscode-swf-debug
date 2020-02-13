@@ -1257,26 +1257,23 @@ public class SWFDebugSession extends DebugSession {
                     }
                 }
                 VariablePresentationHint presentationHint = new VariablePresentationHint();
-                if ((member.getAttributes() & VariableAttribute.PUBLIC_SCOPE) == VariableAttribute.PUBLIC_SCOPE) {
+                if (member.getScope() == VariableAttribute.PUBLIC_SCOPE) {
                     presentationHint.visibility = VariablePresentationHint.VISIBILITY_PUBLIC;
-                } else if ((member.getAttributes()
-                        & VariableAttribute.PRIVATE_SCOPE) == VariableAttribute.PRIVATE_SCOPE) {
+                } else if (member.getScope() == VariableAttribute.PRIVATE_SCOPE) {
                     presentationHint.visibility = VariablePresentationHint.VISIBILITY_PRIVATE;
-                } else if ((member.getAttributes()
-                        & VariableAttribute.PROTECTED_SCOPE) == VariableAttribute.PROTECTED_SCOPE) {
+                } else if (member.getScope() == VariableAttribute.PROTECTED_SCOPE) {
                     presentationHint.visibility = VariablePresentationHint.VISIBILITY_PROTECTED;
-                } else if ((member.getAttributes()
-                        & VariableAttribute.INTERNAL_SCOPE) == VariableAttribute.INTERNAL_SCOPE) {
+                } else if (member.getScope() == VariableAttribute.INTERNAL_SCOPE) {
                     presentationHint.visibility = VariablePresentationHint.VISIBILITY_INTERNAL;
                 }
                 List<String> attributes = new ArrayList<>();
-                if ((member.getAttributes() & VariableAttribute.IS_STATIC) == VariableAttribute.IS_STATIC) {
+                if (member.isAttributeSet(VariableAttribute.IS_STATIC)) {
                     attributes.add(VariablePresentationHint.ATTRIBUTES_STATIC);
                 }
-                if ((member.getAttributes() & VariableAttribute.IS_CONST) == VariableAttribute.IS_CONST) {
+                if (member.isAttributeSet(VariableAttribute.IS_CONST)) {
                     attributes.add(VariablePresentationHint.ATTRIBUTES_CONSTANT);
                 }
-                if ((member.getAttributes() & VariableAttribute.READ_ONLY) == VariableAttribute.READ_ONLY) {
+                if (member.isAttributeSet(VariableAttribute.READ_ONLY)) {
                     attributes.add(VariablePresentationHint.ATTRIBUTES_READ_ONLY);
                 }
                 if (attributes.size() > 0) {
