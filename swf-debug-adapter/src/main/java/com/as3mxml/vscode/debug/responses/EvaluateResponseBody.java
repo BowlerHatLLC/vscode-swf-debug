@@ -25,7 +25,7 @@ public class EvaluateResponseBody extends Response.ResponseBody {
     public String type;
 
     /** If variablesReference is > 0, the new value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest. */
-    public Long variablesReference = null;
+    public Long variablesReference = 0L;
 
     /** The number of named child variables.
         The client can use this optional information to present the variables in a paged UI and fetch them in chunks.

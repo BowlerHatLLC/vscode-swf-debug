@@ -39,5 +39,5 @@ public class Variable {
     /**
      * If variablesReference is > 0, the variable is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
      */
-    public Long variablesReference = null;
+    public Long variablesReference = 0L;
 }

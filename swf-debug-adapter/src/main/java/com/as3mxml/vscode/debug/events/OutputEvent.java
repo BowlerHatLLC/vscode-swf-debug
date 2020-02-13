@@ -32,7 +32,7 @@ public class OutputEvent extends Event<OutputEvent.OutputBody> {
     public static class OutputBody extends Event.EventBody {
         public String category = null;
         public String output;
-        public Long variablesReference = null;
+        public Long variablesReference = 0L;
         public Object data = null;
         public Source source = null;
         public Integer line = null;
