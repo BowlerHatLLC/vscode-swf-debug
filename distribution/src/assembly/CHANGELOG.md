@@ -1,5 +1,20 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.1.0
+
+### New Features
+
+- Evaluate: Added support for assigning values from debug console.
+- Threads: Updates list of workers when one is started or stopped.
+- Variables: Added support for modifying string, number, and boolean values in the variables view when paused at a breakpoint.
+
+### Fixed Issues
+
+- Evaluate: Fixed exception when expression submitted through console when paused. Now displays a more appropriate error message.
+- Step In/Out/Over: Improved exception handling when activated too quickly and runtime is not paused.
+- Variables: Fixed "Invalid variable attributes" message in variables list.
+- Workers: Fixed infinite loop when a worker is paused on exception or suspended for any other reason.
+
 ## v1.0.2
 
 ### Fixed Issues
