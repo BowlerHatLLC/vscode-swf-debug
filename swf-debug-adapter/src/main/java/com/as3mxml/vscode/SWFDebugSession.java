@@ -1407,17 +1407,31 @@ public class SWFDebugSession extends DebugSession {
     }
 
     public void evaluate(Response response, EvaluateRequest.EvaluateArguments arguments) {
+        boolean suspended = false;
+        try {
+            suspended = swfSession.isSuspended();
+        } catch (PlayerDebugException e) {
+        }
+        if (!suspended) {
+            response.success = false;
+            response.message = "Must be paused to evaluate expressions";
+            sendResponse(response);
+            return;
+        }
         EvaluateResponseBody body = new EvaluateResponseBody();
         Object evaluateResult = null;
         try {
-            int frameId = arguments.frameId;
-            Frame[] swfFrames = swfSession.getFrames();
-            if (frameId >= 0 && frameId < swfFrames.length) {
-                Frame swfFrame = swfFrames[frameId];
+            Integer frameId = arguments.frameId;
+            if (frameId != null) {
+                Frame[] swfFrames = swfSession.getFrames();
+                if (frameId >= 0 && frameId < swfFrames.length) {
+                    Frame swfFrame = swfFrames[frameId];
 
-                ASTBuilder builder = new ASTBuilder(false);
-                ValueExp result = builder.parse(new StringReader(arguments.expression));
-                evaluateResult = result.evaluate(new SWFExpressionContext(swfSession, Isolate.DEFAULT_ID, swfFrame));
+                    ASTBuilder builder = new ASTBuilder(false);
+                    ValueExp result = builder.parse(new StringReader(arguments.expression));
+                    evaluateResult = result
+                            .evaluate(new SWFExpressionContext(swfSession, Isolate.DEFAULT_ID, swfFrame));
+                }
             }
         } catch (PlayerFaultException e) {
         } catch (NoSuchVariableException e) {
@@ -1461,12 +1475,10 @@ public class SWFDebugSession extends DebugSession {
             }
         }
 
-        // not sending the body at all will output "not available" as the value of evaluation.
         if (body.result == null) {
-            sendResponse(response);
-        } else {
-            sendResponse(response, body);
+            body.result = "undefined";
         }
+        sendResponse(response, body);
     }
 
     public void exceptionInfo(Response response, ExceptionInfoRequest.ExceptionInfoArguments arguments) {
