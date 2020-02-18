@@ -92,6 +92,7 @@ import flash.tools.debugger.AIRLaunchInfo;
 import flash.tools.debugger.CommandLineException;
 import flash.tools.debugger.DefaultDebuggerCallbacks;
 import flash.tools.debugger.Frame;
+import flash.tools.debugger.ILaunchNotification;
 import flash.tools.debugger.InProgressException;
 import flash.tools.debugger.Isolate;
 import flash.tools.debugger.IsolateSession;
@@ -569,9 +570,10 @@ public class SWFDebugSession extends DebugSession {
                 }
                 if (swfArgs.noDebug) {
                     if (launcher != null) {
-                        swfRunProcess = manager.launchForRun(program, airLaunchInfo, null, null, launcher);
+                        swfRunProcess = manager.launchForRun(program, airLaunchInfo, null, new RunLaunchNotification(),
+                                launcher);
                     } else {
-                        swfRunProcess = manager.launchForRun(program, airLaunchInfo, null, null);
+                        swfRunProcess = manager.launchForRun(program, airLaunchInfo, null, new RunLaunchNotification());
                     }
                 } else {
                     //notice that we use the value of launcher if it isn't null, but
@@ -586,15 +588,8 @@ public class SWFDebugSession extends DebugSession {
                     }
                 }
             }
-        } catch (CommandLineException e) {
-            sendErrorResponse(response, 10001, "Error launching SWF debug session. Process exited with code: "
-                    + e.getExitValue() + "\n\n" + e.getMessage() + "\n\n" + e.getCommandOutput());
-            return;
-        } catch (FileNotFoundException e) {
-            sendErrorResponse(response, 10001, "Error launching SWF debug session. File not found: " + e.getMessage());
-            return;
         } catch (IOException e) {
-            sendErrorResponse(response, 10001, "Error launching SWF debug session.\n" + e.getMessage());
+            sendErrorResponse(response, 10001, getLaunchFailureMessage(e));
             return;
         }
         if (swfSession != null) {
@@ -623,6 +618,27 @@ public class SWFDebugSession extends DebugSession {
         } else if (swfRunProcess != null) {
             sessionThread = new java.lang.Thread(new RunProcessRunner());
             sessionThread.start();
+        }
+    }
+
+    private class RunLaunchNotification implements ILaunchNotification {
+        public void notify(IOException e) {
+            if (e == null) {
+                return;
+            }
+            sendErrorOutputEvent(getLaunchFailureMessage(e));
+        }
+    }
+
+    private String getLaunchFailureMessage(IOException e) {
+        if (e instanceof CommandLineException) {
+            CommandLineException cle = (CommandLineException) e;
+            return "Error launching SWF debug session. Process exited with code: " + cle.getExitValue() + "\n\n"
+                    + cle.getMessage() + "\n\n" + cle.getCommandOutput();
+        } else if (e instanceof FileNotFoundException) {
+            return "Error launching SWF debug session. File not found: " + e.getMessage();
+        } else {
+            return "Error launching SWF debug session.\n" + e.getMessage();
         }
     }
 
