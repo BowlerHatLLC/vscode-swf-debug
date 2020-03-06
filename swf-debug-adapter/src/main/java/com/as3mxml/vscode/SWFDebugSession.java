@@ -115,6 +115,8 @@ import flash.tools.debugger.events.ExceptionFault;
 import flash.tools.debugger.events.FaultEvent;
 import flash.tools.debugger.events.IsolateCreateEvent;
 import flash.tools.debugger.events.IsolateExitEvent;
+import flash.tools.debugger.events.SwfLoadedEvent;
+import flash.tools.debugger.events.SwfUnloadedEvent;
 import flash.tools.debugger.events.TraceEvent;
 import flash.tools.debugger.expression.ASTBuilder;
 import flash.tools.debugger.expression.NoSuchVariableException;
@@ -215,6 +217,7 @@ public class SWFDebugSession extends DebugSession {
 
     private class SessionRunner implements Runnable {
         private boolean initialized = false;
+        private Long mainSwfId = null;
 
         public SessionRunner() {
         }
@@ -232,6 +235,10 @@ public class SWFDebugSession extends DebugSession {
                             logPoint = true;
                         }
                     }
+                    if (cancelRunner) {
+                        //this might get set when handling the events
+                        break;
+                    }
                     while (swfSession.isSuspended() && !waitingForResume) {
                         handleSuspended(logPoint);
                     }
@@ -244,6 +251,9 @@ public class SWFDebugSession extends DebugSession {
                     }
                 } catch (NotConnectedException e) {
                     cancelRunner = true;
+                    StringWriter writer = new StringWriter();
+                    e.printStackTrace(new PrintWriter(writer));
+                    sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
                     sendEvent(new TerminatedEvent());
                 } catch (Exception e) {
                     StringWriter writer = new StringWriter();
@@ -321,6 +331,17 @@ public class SWFDebugSession extends DebugSession {
                 body.reason = ThreadEvent.REASON_EXITED;
                 body.threadID = isolate.getId();
                 sendEvent(new ThreadEvent(body));
+            } else if (event instanceof SwfLoadedEvent) {
+                SwfLoadedEvent loadEvent = (SwfLoadedEvent) event;
+                if (mainSwfId == null) {
+                    mainSwfId = loadEvent.id;
+                }
+            } else if (event instanceof SwfUnloadedEvent) {
+                SwfUnloadedEvent unloadEvent = (SwfUnloadedEvent) event;
+                if (unloadEvent.id == mainSwfId) {
+                    cancelRunner = true;
+                    sendEvent(new TerminatedEvent());
+                }
             }
             return false;
         }
@@ -329,47 +350,47 @@ public class SWFDebugSession extends DebugSession {
                 throws NotConnectedException, NoResponseException, NotSuspendedException {
             StoppedEvent.StoppedBody body = null;
             switch (swfSession.suspendReason()) {
-            case SuspendReason.ScriptLoaded: {
-                if (initialized) {
-                    refreshPendingBreakpoints();
-                    swfSession.resume();
-                } else {
-                    //initialize when the first script is loaded
-                    initialized = true;
-                    sendEvent(new InitializedEvent());
+                case SuspendReason.ScriptLoaded: {
+                    if (initialized) {
+                        refreshPendingBreakpoints();
+                        swfSession.resume();
+                    } else {
+                        //initialize when the first script is loaded
+                        initialized = true;
+                        sendEvent(new InitializedEvent());
+                    }
+                    break;
                 }
-                break;
-            }
-            case SuspendReason.Breakpoint: {
-                if (logPoint) {
-                    //if it was a logpoint, then resume
-                    //immediately because we should not stop
-                    swfSession.resume();
-                } else {
+                case SuspendReason.Breakpoint: {
+                    if (logPoint) {
+                        //if it was a logpoint, then resume
+                        //immediately because we should not stop
+                        swfSession.resume();
+                    } else {
+                        body = new StoppedEvent.StoppedBody();
+                        body.reason = StoppedEvent.REASON_BREAKPOINT;
+                    }
+                    break;
+                }
+                case SuspendReason.StopRequest: {
                     body = new StoppedEvent.StoppedBody();
-                    body.reason = StoppedEvent.REASON_BREAKPOINT;
+                    body.reason = StoppedEvent.REASON_PAUSE;
+                    break;
                 }
-                break;
-            }
-            case SuspendReason.StopRequest: {
-                body = new StoppedEvent.StoppedBody();
-                body.reason = StoppedEvent.REASON_PAUSE;
-                break;
-            }
-            case SuspendReason.Fault: {
-                body = new StoppedEvent.StoppedBody();
-                body.reason = StoppedEvent.REASON_EXCEPTION;
-                body.description = "Paused on exception";
-                if (previousFaultEvent != null) {
-                    body.text = previousFaultEvent.information;
+                case SuspendReason.Fault: {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_EXCEPTION;
+                    body.description = "Paused on exception";
+                    if (previousFaultEvent != null) {
+                        body.text = previousFaultEvent.information;
+                    }
+                    break;
                 }
-                break;
-            }
-            default: {
-                body = new StoppedEvent.StoppedBody();
-                body.reason = StoppedEvent.REASON_UNKNOWN;
-                sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + "\n");
-            }
+                default: {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_UNKNOWN;
+                    sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + "\n");
+                }
             }
             if (body != null) {
                 waitingForResume = true;
@@ -385,12 +406,12 @@ public class SWFDebugSession extends DebugSession {
 
             StoppedEvent.StoppedBody body = null;
             switch (isolateSession.suspendReason()) {
-            default: {
-                body = new StoppedEvent.StoppedBody();
-                body.reason = StoppedEvent.REASON_UNKNOWN;
-                sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + " for isolate with ID: "
-                        + isolate.getId() + "\n");
-            }
+                default: {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_UNKNOWN;
+                    sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + " for isolate with ID: "
+                            + isolate.getId() + "\n");
+                }
             }
             if (body != null) {
                 isolateWithState.waiting = true;
