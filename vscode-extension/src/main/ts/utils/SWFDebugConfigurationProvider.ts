@@ -263,6 +263,25 @@ export default class SWFDebugConfigurationProvider
             }
             break;
           }
+          default: {
+            if (isMobile) {
+              //if we know it's mobile, any mobile platform should be fine
+              if ("ios" in application) {
+                appDescriptorPath = application.ios;
+              } else if ("android" in application) {
+                appDescriptorPath = application.android;
+              }
+            } else {
+              //if it's desktop, then try to use the existing platform
+              if (process.platform === "win32") {
+                if ("windows" in application) {
+                  appDescriptorPath = application.windows;
+                }
+              } else if ("mac" in application) {
+                appDescriptorPath = application.mac;
+              }
+            }
+          }
         }
       }
     }
