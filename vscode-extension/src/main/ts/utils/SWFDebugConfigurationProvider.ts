@@ -21,6 +21,8 @@ import * as json5 from "json5";
 const FILE_EXTENSION_SWF = ".swf";
 const FILE_EXTENSION_ANE = ".ane";
 const FILE_EXTENSION_XML = ".xml";
+const FILE_EXTENSION_MXML = ".mxml";
+const FILE_EXTENSION_AS = ".as";
 const SUFFIX_AIR_APP = "-app.xml";
 const FILE_NAME_UNPACKAGED_ANES = ".as3mxml-unpackaged-anes";
 const FILE_NAME_ASCONFIG_JSON = "asconfig.json";
@@ -221,6 +223,7 @@ export default class SWFDebugConfigurationProvider
     let outputPath: string = null;
     let mainClassPath: string = null;
     let animateFilePath: string = null;
+    let sourcePath: string[] = null;
     let libraryPath: string[] = null;
     let externalLibraryPath: string[] = null;
     let requireAIR = false;
@@ -280,6 +283,9 @@ export default class SWFDebugConfigurationProvider
       if ("output" in compilerOptions) {
         outputPath = asconfigJSON.compilerOptions.output;
       }
+      if ("source-path" in compilerOptions) {
+        sourcePath = asconfigJSON.compilerOptions["source-path"];
+      }
       if ("library-path" in compilerOptions) {
         libraryPath = asconfigJSON.compilerOptions["library-path"];
       }
@@ -294,6 +300,39 @@ export default class SWFDebugConfigurationProvider
         //the last entry in the files field is the main
         //class used as the entry point.
         mainClassPath = files[files.length - 1];
+      }
+    }
+    if (asconfigJSON && "mainClass" in asconfigJSON) {
+      let mainClass = asconfigJSON.mainClass;
+      let mainClassParts = mainClass.split(".");
+      if (sourcePath === null) {
+        sourcePath = ["."];
+      }
+      let mainClassPrefix = mainClassParts.join(path.sep);
+      for (let sourcePathEntry of sourcePath) {
+        let filePath = path.join(
+          sourcePathEntry,
+          mainClassPrefix + FILE_EXTENSION_AS
+        );
+        let absoluteFilePath = path.resolve(
+          workspaceFolder.uri.fsPath,
+          filePath
+        );
+        if (fs.existsSync(absoluteFilePath)) {
+          mainClassPath = filePath;
+        } else {
+          let filePath = path.join(
+            sourcePathEntry,
+            mainClassPrefix + FILE_EXTENSION_MXML
+          );
+          let absoluteFilePath = path.resolve(
+            workspaceFolder.uri.fsPath,
+            filePath
+          );
+          if (fs.existsSync(absoluteFilePath)) {
+            mainClassPath = filePath;
+          }
+        }
       }
     }
     if (asconfigJSON && "animateOptions" in asconfigJSON) {
