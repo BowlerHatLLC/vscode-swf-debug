@@ -386,6 +386,11 @@ public class SWFDebugSession extends DebugSession {
                     }
                     break;
                 }
+                case SuspendReason.Unknown: {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_UNKNOWN;
+                    break;
+                }
                 default: {
                     body = new StoppedEvent.StoppedBody();
                     body.reason = StoppedEvent.REASON_UNKNOWN;
