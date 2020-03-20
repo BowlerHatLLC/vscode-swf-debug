@@ -1,5 +1,18 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.1.1
+
+### Fixed Issues
+
+- Launch: Fixed issue where `mainClass` in _asconfig.json_ file was not correctly resolved.
+- Launch: Fixed issue where no failure message was reported on exit when running without debug.
+
+### Other Changes
+
+- Launch: When _asconfig.json_ includes different Adobe AIR application descriptors for "ios" and "android", but the `versionPlatform` is not specified in _launch.json_, tries to use "ios" first and then "android" instead of failing.
+- Launch: When _asconfig.json_ includes multiple Adobe AIR application descriptors for desktop platforms ("windows" and "mac"), uses the one that matches the current platform.
+- Miscellaneous: Improved some exception handling related to runtime exitting.
+
 ## v1.1.0
 
 ### New Features
