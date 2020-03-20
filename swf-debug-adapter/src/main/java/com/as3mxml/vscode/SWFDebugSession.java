@@ -161,6 +161,7 @@ public class SWFDebugSession extends DebugSession {
     private int nextBreakpointID = 1;
     private String forwardedPortPlatform = null;
     private int forwardedPort = -1;
+    private Long mainSwfId = null;
 
     private class IsolateWithState {
         public IsolateWithState(Isolate isolate) {
@@ -217,7 +218,6 @@ public class SWFDebugSession extends DebugSession {
 
     private class SessionRunner implements Runnable {
         private boolean initialized = false;
-        private Long mainSwfId = null;
 
         public SessionRunner() {
         }
@@ -336,6 +336,7 @@ public class SWFDebugSession extends DebugSession {
                 if (mainSwfId == null) {
                     mainSwfId = loadEvent.id;
                 }
+                refreshPendingBreakpoints();
             } else if (event instanceof SwfUnloadedEvent) {
                 SwfUnloadedEvent unloadEvent = (SwfUnloadedEvent) event;
                 if (unloadEvent.id == mainSwfId) {
@@ -946,14 +947,13 @@ public class SWFDebugSession extends DebugSession {
             e.printStackTrace(new PrintWriter(writer));
             sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
-        if (foundSourceFile == null && !badExtension) {
+        if ((mainSwfId == null || foundSourceFile == null) && !badExtension) {
             //the file was not found, but it has a supported extension,
             //so we'll try to add it again later.
             //SWF is a streaming format, so not all bytecode is loaded
             //immediately.
-            if (!pendingBreakpoints.containsKey(path)) {
-                pendingBreakpoints.put(path, new PendingBreakpoints(breakpoints));
-            }
+            pendingBreakpoints.put(path, new PendingBreakpoints(breakpoints));
+            foundSourceFile = null;
         }
         try {
             //clear all old breakpoints for this file because our new list
