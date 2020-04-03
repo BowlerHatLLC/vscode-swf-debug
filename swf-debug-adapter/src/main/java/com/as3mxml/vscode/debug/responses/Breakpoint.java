@@ -29,7 +29,7 @@ public class Breakpoint {
     /**
      * If true breakpoint could be set (but not necessarily at the desired location).
      */
-    public boolean verified;
+    public boolean verified = false;
 
     /**
      * An optional message about the state of the breakpoint. This is shown to the user and can be used to explain why a breakpoint could not be verified.
