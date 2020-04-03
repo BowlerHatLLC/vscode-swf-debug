@@ -1,5 +1,11 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.1.2
+
+### Fixed Issues
+
+- Breakpoints: Fixed issue where a "no response" exception was thrown sometimes when setting breakpoints before the SWF finished loading.
+
 ## v1.1.1
 
 ### Fixed Issues
