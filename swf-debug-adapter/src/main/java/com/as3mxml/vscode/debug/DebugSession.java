@@ -82,14 +82,13 @@ public abstract class DebugSession extends ProtocolServer {
 
     public void sendErrorResponse(Response response, int id, String format, HashMap<String, Object> arguments,
             boolean user, boolean telemetry) {
-        Message msg = new Message(id, format, arguments, user, telemetry);
-        String message = format;
         if (arguments != null) {
             for (String key : arguments.keySet()) {
-                message = message.replace("{" + key + "}", arguments.get(key).toString());
+                format = format.replace("{" + key + "}", arguments.get(key).toString());
             }
         }
-        response.setErrorBody(message, new ErrorResponseBody(msg));
+        Message message = new Message(id, format, null, user, telemetry);
+        response.setErrorBody(format, new ErrorResponseBody(message));
         sendMessage(response);
     }
 
@@ -100,89 +99,89 @@ public abstract class DebugSession extends ProtocolServer {
 
         try {
             switch (command) {
-            case InitializeRequest.REQUEST_COMMAND: {
-                initialize(response, (InitializeRequest.InitializeRequestArguments) arguments);
-                break;
-            }
-            case LaunchRequest.REQUEST_COMMAND: {
-                launch(response, (LaunchRequest.LaunchRequestArguments) arguments);
-                break;
-            }
-            case AttachRequest.REQUEST_COMMAND: {
-                attach(response, (AttachRequest.AttachRequestArguments) arguments);
-                break;
-            }
-            case "disconnect": {
-                disconnect(response, arguments);
-                break;
-            }
-            case NextRequest.REQUEST_COMMAND: {
-                next(response, (NextRequest.NextArguments) arguments);
-                break;
-            }
-            case ContinueRequest.REQUEST_COMMAND: {
-                continueCommand(response, (ContinueRequest.ContinueArguments) arguments);
-                break;
-            }
-            case StepInRequest.REQUEST_COMMAND: {
-                stepIn(response, (StepInRequest.StepInArguments) arguments);
-                break;
-            }
-            case StepOutRequest.REQUEST_COMMAND: {
-                stepOut(response, (StepOutRequest.StepOutArguments) arguments);
-                break;
-            }
-            case PauseRequest.REQUEST_COMMAND: {
-                pause(response, (PauseRequest.PauseArguments) arguments);
-                break;
-            }
-            case StackTraceRequest.REQUEST_COMMAND: {
-                stackTrace(response, (StackTraceRequest.StackTraceArguments) arguments);
-                break;
-            }
-            case ScopesRequest.REQUEST_COMMAND: {
-                scopes(response, (ScopesRequest.ScopesArguments) arguments);
-                break;
-            }
-            case VariablesRequest.REQUEST_COMMAND: {
-                variables(response, (VariablesRequest.VariablesArguments) arguments);
-                break;
-            }
-            case "source": {
-                source(response, arguments);
-                break;
-            }
-            case "threads": {
-                threads(response, arguments);
-                break;
-            }
-            case SetBreakpointsRequest.REQUEST_COMMAND: {
-                setBreakpoints(response, (SetBreakpointsRequest.SetBreakpointsArguments) arguments);
-                break;
-            }
-            case "setExceptionBreakpoints": {
-                setExceptionBreakpoints(response, arguments);
-                break;
-            }
-            case EvaluateRequest.REQUEST_COMMAND: {
-                evaluate(response, (EvaluateRequest.EvaluateArguments) arguments);
-                break;
-            }
-            case ExceptionInfoRequest.REQUEST_COMMAND: {
-                exceptionInfo(response, (ExceptionInfoRequest.ExceptionInfoArguments) arguments);
-                break;
-            }
-            case SetVariableRequest.REQUEST_COMMAND: {
-                setVariable(response, (SetVariableRequest.SetVariableArguments) arguments);
-                break;
-            }
-            default: {
-                System.err.println("unknown request command: " + command);
-                HashMap<String, Object> errorArgs = new HashMap<>();
-                errorArgs.put("_request", command);
-                sendErrorResponse(response, 1014, "unrecognized request: {_request}", errorArgs);
-            }
-                break;
+                case InitializeRequest.REQUEST_COMMAND: {
+                    initialize(response, (InitializeRequest.InitializeRequestArguments) arguments);
+                    break;
+                }
+                case LaunchRequest.REQUEST_COMMAND: {
+                    launch(response, (LaunchRequest.LaunchRequestArguments) arguments);
+                    break;
+                }
+                case AttachRequest.REQUEST_COMMAND: {
+                    attach(response, (AttachRequest.AttachRequestArguments) arguments);
+                    break;
+                }
+                case "disconnect": {
+                    disconnect(response, arguments);
+                    break;
+                }
+                case NextRequest.REQUEST_COMMAND: {
+                    next(response, (NextRequest.NextArguments) arguments);
+                    break;
+                }
+                case ContinueRequest.REQUEST_COMMAND: {
+                    continueCommand(response, (ContinueRequest.ContinueArguments) arguments);
+                    break;
+                }
+                case StepInRequest.REQUEST_COMMAND: {
+                    stepIn(response, (StepInRequest.StepInArguments) arguments);
+                    break;
+                }
+                case StepOutRequest.REQUEST_COMMAND: {
+                    stepOut(response, (StepOutRequest.StepOutArguments) arguments);
+                    break;
+                }
+                case PauseRequest.REQUEST_COMMAND: {
+                    pause(response, (PauseRequest.PauseArguments) arguments);
+                    break;
+                }
+                case StackTraceRequest.REQUEST_COMMAND: {
+                    stackTrace(response, (StackTraceRequest.StackTraceArguments) arguments);
+                    break;
+                }
+                case ScopesRequest.REQUEST_COMMAND: {
+                    scopes(response, (ScopesRequest.ScopesArguments) arguments);
+                    break;
+                }
+                case VariablesRequest.REQUEST_COMMAND: {
+                    variables(response, (VariablesRequest.VariablesArguments) arguments);
+                    break;
+                }
+                case "source": {
+                    source(response, arguments);
+                    break;
+                }
+                case "threads": {
+                    threads(response, arguments);
+                    break;
+                }
+                case SetBreakpointsRequest.REQUEST_COMMAND: {
+                    setBreakpoints(response, (SetBreakpointsRequest.SetBreakpointsArguments) arguments);
+                    break;
+                }
+                case "setExceptionBreakpoints": {
+                    setExceptionBreakpoints(response, arguments);
+                    break;
+                }
+                case EvaluateRequest.REQUEST_COMMAND: {
+                    evaluate(response, (EvaluateRequest.EvaluateArguments) arguments);
+                    break;
+                }
+                case ExceptionInfoRequest.REQUEST_COMMAND: {
+                    exceptionInfo(response, (ExceptionInfoRequest.ExceptionInfoArguments) arguments);
+                    break;
+                }
+                case SetVariableRequest.REQUEST_COMMAND: {
+                    setVariable(response, (SetVariableRequest.SetVariableArguments) arguments);
+                    break;
+                }
+                default: {
+                    System.err.println("unknown request command: " + command);
+                    HashMap<String, Object> errorArgs = new HashMap<>();
+                    errorArgs.put("_request", command);
+                    sendErrorResponse(response, 1014, "unrecognized request: {_request}", errorArgs);
+                }
+                    break;
             }
         } catch (Exception e) {
             StringWriter writer = new StringWriter();
@@ -343,51 +342,51 @@ public abstract class DebugSession extends ProtocolServer {
                 throws JsonParseException {
             JsonObject jo = je.getAsJsonObject();
             switch (jo.get("command").getAsString()) {
-            case InitializeRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, InitializeRequest.class);
-            }
-            case SetBreakpointsRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, SetBreakpointsRequest.class);
-            }
-            case LaunchRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, LaunchRequest.class);
-            }
-            case AttachRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, AttachRequest.class);
-            }
-            case StackTraceRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, StackTraceRequest.class);
-            }
-            case ScopesRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, ScopesRequest.class);
-            }
-            case VariablesRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, VariablesRequest.class);
-            }
-            case EvaluateRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, EvaluateRequest.class);
-            }
-            case ExceptionInfoRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, ExceptionInfoRequest.class);
-            }
-            case PauseRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, PauseRequest.class);
-            }
-            case ContinueRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, ContinueRequest.class);
-            }
-            case NextRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, NextRequest.class);
-            }
-            case StepInRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, StepInRequest.class);
-            }
-            case StepOutRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, StepOutRequest.class);
-            }
-            case SetVariableRequest.REQUEST_COMMAND: {
-                return gson.fromJson(je, SetVariableRequest.class);
-            }
+                case InitializeRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, InitializeRequest.class);
+                }
+                case SetBreakpointsRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, SetBreakpointsRequest.class);
+                }
+                case LaunchRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, LaunchRequest.class);
+                }
+                case AttachRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, AttachRequest.class);
+                }
+                case StackTraceRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, StackTraceRequest.class);
+                }
+                case ScopesRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, ScopesRequest.class);
+                }
+                case VariablesRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, VariablesRequest.class);
+                }
+                case EvaluateRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, EvaluateRequest.class);
+                }
+                case ExceptionInfoRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, ExceptionInfoRequest.class);
+                }
+                case PauseRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, PauseRequest.class);
+                }
+                case ContinueRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, ContinueRequest.class);
+                }
+                case NextRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, NextRequest.class);
+                }
+                case StepInRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, StepInRequest.class);
+                }
+                case StepOutRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, StepOutRequest.class);
+                }
+                case SetVariableRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, SetVariableRequest.class);
+                }
             }
             Gson newGson = new Gson();
             return newGson.fromJson(je, Request.class);
