@@ -31,7 +31,7 @@ public class Message {
     /**
      * An object used as a dictionary for looking up the variables in the format string.
      */
-    public Map<String, Object> variables;
+    public Map<String, String> variables;
 
     /**
      * If true show user.
@@ -57,15 +57,15 @@ public class Message {
         this(id, format, null, true, false);
     }
 
-    public Message(int id, String format, Map<String, Object> variables) {
+    public Message(int id, String format, Map<String, String> variables) {
         this(id, format, variables, true, false);
     }
 
-    public Message(int id, String format, Map<String, Object> variables, boolean user) {
+    public Message(int id, String format, Map<String, String> variables, boolean user) {
         this(id, format, variables, user, false);
     }
 
-    public Message(int id, String format, Map<String, Object> variables, boolean user, boolean telemetry) {
+    public Message(int id, String format, Map<String, String> variables, boolean user, boolean telemetry) {
         this.id = id;
         this.format = format;
         this.variables = variables;
