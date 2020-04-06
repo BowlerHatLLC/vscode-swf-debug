@@ -47,6 +47,7 @@ import com.as3mxml.vscode.debug.events.ThreadEvent;
 import com.as3mxml.vscode.debug.protocol.Request;
 import com.as3mxml.vscode.debug.protocol.Response;
 import com.as3mxml.vscode.debug.requests.AttachRequest;
+import com.as3mxml.vscode.debug.requests.ConfigurationDoneRequest;
 import com.as3mxml.vscode.debug.requests.ContinueRequest;
 import com.as3mxml.vscode.debug.requests.EvaluateRequest;
 import com.as3mxml.vscode.debug.requests.ExceptionInfoRequest;
@@ -162,6 +163,7 @@ public class SWFDebugSession extends DebugSession {
     private String forwardedPortPlatform = null;
     private int forwardedPort = -1;
     private Long mainSwfId = null;
+    private boolean configDone = false;
 
     private class IsolateWithState {
         public IsolateWithState(Isolate isolate) {
@@ -314,8 +316,8 @@ public class SWFDebugSession extends DebugSession {
                 Isolate isolate = isolateEvent.isolate;
                 IsolateWithState isolateWithState = new IsolateWithState(isolate);
                 isolates.add(isolateWithState);
-                IsolateSession session = swfSession.getWorkerSession(isolate.getId());
-                session.resume();
+                IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                isolateSession.resume();
 
                 ThreadEvent.ThreadBody body = new ThreadEvent.ThreadBody();
                 body.reason = ThreadEvent.REASON_STARTED;
@@ -353,8 +355,12 @@ public class SWFDebugSession extends DebugSession {
             switch (swfSession.suspendReason()) {
                 case SuspendReason.ScriptLoaded: {
                     if (initialized) {
-                        refreshPendingBreakpoints();
-                        swfSession.resume();
+                        if (configDone) {
+                            refreshPendingBreakpoints();
+                            swfSession.resume();
+                        } else {
+                            waitingForResume = true;
+                        }
                     } else {
                         //initialize when the first script is loaded
                         initialized = true;
@@ -494,6 +500,7 @@ public class SWFDebugSession extends DebugSession {
         capabilities.supportsExceptionInfoRequest = true;
         capabilities.supportsLogPoints = true;
         capabilities.supportsSetVariable = true;
+        capabilities.supportsConfigurationDoneRequest = true;
         sendResponse(response, capabilities);
     }
 
@@ -906,6 +913,28 @@ public class SWFDebugSession extends DebugSession {
         }
     }
 
+    public void configurationDone(Response response, ConfigurationDoneRequest.ConfigurationDoneArguments arguments) {
+        try {
+            refreshPendingBreakpoints();
+            swfSession.resume();
+            stopWaitingForResume();
+            configDone = true;
+        } catch (NotSuspendedException e) {
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+        } catch (NoResponseException e) {
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+        } catch (NotConnectedException e) {
+            StringWriter writer = new StringWriter();
+            e.printStackTrace(new PrintWriter(writer));
+            sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+        }
+        sendResponse(response);
+    }
+
     public void setBreakpoints(Response response, SetBreakpointsRequest.SetBreakpointsArguments arguments) {
         String path = arguments.source.path;
         List<Breakpoint> breakpoints = setBreakpoints(path, arguments.breakpoints);
@@ -947,7 +976,7 @@ public class SWFDebugSession extends DebugSession {
             e.printStackTrace(new PrintWriter(writer));
             sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
-        if ((mainSwfId == null || foundSourceFile == null) && !badExtension) {
+        if (foundSourceFile == null && !badExtension) {
             //the file was not found, but it has a supported extension,
             //so we'll try to add it again later.
             //SWF is a streaming format, so not all bytecode is loaded
