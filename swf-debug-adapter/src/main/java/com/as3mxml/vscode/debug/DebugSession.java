@@ -31,6 +31,7 @@ import com.as3mxml.vscode.debug.protocol.ProtocolServer;
 import com.as3mxml.vscode.debug.protocol.Request;
 import com.as3mxml.vscode.debug.protocol.Response;
 import com.as3mxml.vscode.debug.requests.AttachRequest;
+import com.as3mxml.vscode.debug.requests.ConfigurationDoneRequest;
 import com.as3mxml.vscode.debug.requests.ContinueRequest;
 import com.as3mxml.vscode.debug.requests.EvaluateRequest;
 import com.as3mxml.vscode.debug.requests.ExceptionInfoRequest;
@@ -93,10 +94,6 @@ public abstract class DebugSession extends ProtocolServer {
     }
 
     protected void dispatchRequest(String command, Request.RequestArguments arguments, Response response) {
-        if (arguments == null) {
-            arguments = new Request.RequestArguments();
-        }
-
         try {
             switch (command) {
                 case InitializeRequest.REQUEST_COMMAND: {
@@ -113,6 +110,10 @@ public abstract class DebugSession extends ProtocolServer {
                 }
                 case "disconnect": {
                     disconnect(response, arguments);
+                    break;
+                }
+                case ConfigurationDoneRequest.REQUEST_COMMAND: {
+                    configurationDone(response, (ConfigurationDoneRequest.ConfigurationDoneArguments) arguments);
                     break;
                 }
                 case NextRequest.REQUEST_COMMAND: {
@@ -211,6 +212,9 @@ public abstract class DebugSession extends ProtocolServer {
     public abstract void attach(Response response, AttachRequest.AttachRequestArguments arguments);
 
     public abstract void disconnect(Response response, Request.RequestArguments arguments);
+
+    public abstract void configurationDone(Response response,
+            ConfigurationDoneRequest.ConfigurationDoneArguments arguments);
 
     public abstract void setBreakpoints(Response response, SetBreakpointsRequest.SetBreakpointsArguments arguments);
 
@@ -353,6 +357,9 @@ public abstract class DebugSession extends ProtocolServer {
                 }
                 case AttachRequest.REQUEST_COMMAND: {
                     return gson.fromJson(je, AttachRequest.class);
+                }
+                case ConfigurationDoneRequest.REQUEST_COMMAND: {
+                    return gson.fromJson(je, ConfigurationDoneRequest.class);
                 }
                 case StackTraceRequest.REQUEST_COMMAND: {
                     return gson.fromJson(je, StackTraceRequest.class);

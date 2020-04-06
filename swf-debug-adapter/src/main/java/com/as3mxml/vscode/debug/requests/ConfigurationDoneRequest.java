@@ -17,12 +17,11 @@ package com.as3mxml.vscode.debug.requests;
 
 import com.as3mxml.vscode.debug.protocol.Request;
 
-public class ContinueRequest extends Request {
-	public static final String REQUEST_COMMAND = "continue";
+public class ConfigurationDoneRequest extends Request {
+	public static final String REQUEST_COMMAND = "configurationDone";
 
-	public ContinueRequest.ContinueArguments arguments;
+	public ConfigurationDoneRequest.ConfigurationDoneArguments arguments;
 
-	public static class ContinueArguments extends RequestArguments {
-		public int threadId;
+	public static class ConfigurationDoneArguments extends Request.RequestArguments {
 	}
 }
