@@ -20,9 +20,13 @@ import com.as3mxml.vscode.debug.protocol.Event;
 public class StoppedEvent extends Event<StoppedEvent.StoppedBody> {
     public static String EVENT_TYPE = "stopped";
     public static String REASON_BREAKPOINT = "breakpoint";
-    public static String REASON_STEP = "step";
+    public static String REASON_ENTRY = "entry";
     public static String REASON_EXCEPTION = "exception";
+    public static String REASON_GOTO = "goto";
+    public static String REASON_FUNCTION_BREAKPOINT = "function breakpoint";
+    public static String REASON_DATA_BREAKPOINT = "data breakpoint";
     public static String REASON_PAUSE = "pause";
+    public static String REASON_STEP = "step";
     public static String REASON_UNKNOWN = "unknown";
 
     public StoppedEvent(StoppedEvent.StoppedBody body) {
