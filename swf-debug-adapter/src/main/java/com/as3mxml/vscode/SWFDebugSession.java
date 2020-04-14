@@ -323,6 +323,8 @@ public class SWFDebugSession extends DebugSession {
                 body.reason = ThreadEvent.REASON_STARTED;
                 body.threadID = isolate.getId();
                 sendEvent(new ThreadEvent(body));
+
+                refreshPendingBreakpoints();
             } else if (event instanceof IsolateExitEvent) {
                 //a worker has exited
                 IsolateExitEvent isolateEvent = (IsolateExitEvent) event;
@@ -418,11 +420,35 @@ public class SWFDebugSession extends DebugSession {
 
             StoppedEvent.StoppedBody body = null;
             switch (isolateSession.suspendReason()) {
+                case SuspendReason.Breakpoint: {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_BREAKPOINT;
+                    break;
+                }
+                case SuspendReason.StopRequest: {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_PAUSE;
+                    break;
+                }
+                case SuspendReason.Fault: {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_EXCEPTION;
+                    body.description = "Paused on exception";
+                    if (previousFaultEvent != null) {
+                        body.text = previousFaultEvent.information;
+                    }
+                    break;
+                }
+                case SuspendReason.Unknown: {
+                    body = new StoppedEvent.StoppedBody();
+                    body.reason = StoppedEvent.REASON_UNKNOWN;
+                    break;
+                }
                 default: {
                     body = new StoppedEvent.StoppedBody();
                     body.reason = StoppedEvent.REASON_UNKNOWN;
-                    sendOutputEvent("Unknown suspend reason: " + swfSession.suspendReason() + " for isolate with ID: "
-                            + isolate.getId() + "\n");
+                    sendOutputEvent("Unknown suspend reason: " + isolateSession.suspendReason()
+                            + " for isolate with ID: " + isolate.getId() + "\n");
                 }
             }
             if (body != null) {
@@ -967,6 +993,35 @@ public class SWFDebugSession extends DebugSession {
                     break;
                 }
             }
+            if (foundSourceFile == null) {
+                for (IsolateWithState isolateWithState : isolates) {
+                    Isolate isolate = isolateWithState.isolate;
+                    IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                    swfs = isolateSession.getSwfs();
+                    for (SwfInfo swf : swfs) {
+                        SourceFile[] sourceFiles = swf.getSourceList(swfSession);
+                        for (SourceFile sourceFile : sourceFiles) {
+                            //we can't check if the String paths are equal due to
+                            //file system case sensitivity.
+                            if (pathAsPath.equals(Paths.get(sourceFile.getFullPath()))) {
+                                if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)
+                                        || path.endsWith(FILE_EXTENSION_HX)) {
+                                    foundSourceFile = sourceFile;
+                                } else {
+                                    badExtension = true;
+                                }
+                                break;
+                            }
+                        }
+                        if (foundSourceFile != null) {
+                            break;
+                        }
+                    }
+                    if (foundSourceFile != null) {
+                        break;
+                    }
+                }
+            }
         } catch (InProgressException e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
@@ -1020,20 +1075,22 @@ public class SWFDebugSession extends DebugSession {
                 try {
                     Location breakpointLocation = swfSession.setBreakpoint(foundSourceFile.getId(), sourceLine);
                     if (breakpointLocation != null) {
-                        //I don't know if the line could change, but might as well
-                        //use the one returned by the location
-                        responseBreakpoint.line = breakpointLocation.getLine();
-                        responseBreakpoint.verified = true;
-                        String logMessage = sourceBreakpoint.logMessage;
-                        if (logMessage != null) {
-                            savedLogLocations.put(path, new LogLocation(breakpointLocation, logMessage));
-                        }
-                    } else {
-                        //setBreakpoint() may return null if the breakpoint
-                        //could not be set. that's fine. the user will simply
-                        //see that the breakpoint is not verified.
-                        responseBreakpoint.verified = false;
+                        verifyBreakpoint(path, breakpointLocation, sourceBreakpoint, responseBreakpoint);
                     }
+                    if (!responseBreakpoint.verified) {
+                        for (IsolateWithState isolateWithState : isolates) {
+                            Isolate isolate = isolateWithState.isolate;
+                            IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                            breakpointLocation = isolateSession.setBreakpoint(foundSourceFile.getId(), sourceLine);
+                            if (breakpointLocation != null) {
+                                verifyBreakpoint(path, breakpointLocation, sourceBreakpoint, responseBreakpoint);
+                                break;
+                            }
+                        }
+                    }
+                    //setBreakpoint() may return null if the breakpoint
+                    //could not be set. that's fine. the user will simply
+                    //see that the breakpoint is not verified.
                 } catch (NoResponseException e) {
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
@@ -1049,6 +1106,18 @@ public class SWFDebugSession extends DebugSession {
             result.add(responseBreakpoint);
         }
         return result;
+    }
+
+    private void verifyBreakpoint(String path, Location breakpointLocation, SourceBreakpoint sourceBreakpoint,
+            Breakpoint responseBreakpoint) {
+        //I don't know if the line could change, but might as well
+        //use the one returned by the location
+        responseBreakpoint.line = breakpointLocation.getLine();
+        responseBreakpoint.verified = true;
+        String logMessage = sourceBreakpoint.logMessage;
+        if (logMessage != null) {
+            savedLogLocations.put(path, new LogLocation(breakpointLocation, logMessage));
+        }
     }
 
     private void refreshPendingBreakpoints() {
@@ -1102,7 +1171,24 @@ public class SWFDebugSession extends DebugSession {
                 stopWaitingForResume();
             } else {
                 // worker
-                response.success = false;
+                boolean foundWorker = false;
+                for (IsolateWithState isolateWithState : isolates) {
+                    Isolate isolate = isolateWithState.isolate;
+                    if (arguments.threadId == isolate.getId()) {
+                        foundWorker = true;
+                        IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                        if (!isolateSession.isSuspended()) {
+                            response.success = false;
+                            sendResponse(response);
+                            return;
+                        }
+                        isolateSession.resume();
+                        isolateWithState.waiting = false;
+                    }
+                }
+                if (!foundWorker) {
+                    response.success = false;
+                }
             }
         } catch (NotSuspendedException e) {
             response.success = false;
@@ -1131,7 +1217,24 @@ public class SWFDebugSession extends DebugSession {
                 stopWaitingForResume();
             } else {
                 // worker
-                response.success = false;
+                boolean foundWorker = false;
+                for (IsolateWithState isolateWithState : isolates) {
+                    Isolate isolate = isolateWithState.isolate;
+                    if (arguments.threadId == isolate.getId()) {
+                        foundWorker = true;
+                        IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                        if (!isolateSession.isSuspended()) {
+                            response.success = false;
+                            sendResponse(response);
+                            return;
+                        }
+                        isolateSession.stepOver();
+                        isolateWithState.waiting = false;
+                    }
+                }
+                if (!foundWorker) {
+                    response.success = false;
+                }
             }
         } catch (NotSuspendedException e) {
             response.success = false;
@@ -1160,7 +1263,24 @@ public class SWFDebugSession extends DebugSession {
                 stopWaitingForResume();
             } else {
                 // worker
-                response.success = false;
+                boolean foundWorker = false;
+                for (IsolateWithState isolateWithState : isolates) {
+                    Isolate isolate = isolateWithState.isolate;
+                    if (arguments.threadId == isolate.getId()) {
+                        foundWorker = true;
+                        IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                        if (!isolateSession.isSuspended()) {
+                            response.success = false;
+                            sendResponse(response);
+                            return;
+                        }
+                        isolateSession.stepInto();
+                        isolateWithState.waiting = false;
+                    }
+                }
+                if (!foundWorker) {
+                    response.success = false;
+                }
             }
         } catch (NotSuspendedException e) {
             response.success = false;
@@ -1189,7 +1309,24 @@ public class SWFDebugSession extends DebugSession {
                 stopWaitingForResume();
             } else {
                 // worker
-                response.success = false;
+                boolean foundWorker = false;
+                for (IsolateWithState isolateWithState : isolates) {
+                    Isolate isolate = isolateWithState.isolate;
+                    if (arguments.threadId == isolate.getId()) {
+                        foundWorker = true;
+                        IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                        if (!isolateSession.isSuspended()) {
+                            response.success = false;
+                            sendResponse(response);
+                            return;
+                        }
+                        isolateSession.stepOut();
+                        isolateWithState.waiting = false;
+                    }
+                }
+                if (!foundWorker) {
+                    response.success = false;
+                }
             }
         } catch (NotSuspendedException e) {
             response.success = false;
@@ -1218,7 +1355,24 @@ public class SWFDebugSession extends DebugSession {
                 stopWaitingForResume();
             } else {
                 // worker
-                response.success = false;
+                boolean foundWorker = false;
+                for (IsolateWithState isolateWithState : isolates) {
+                    Isolate isolate = isolateWithState.isolate;
+                    if (arguments.threadId == isolate.getId()) {
+                        foundWorker = true;
+                        IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                        if (isolateSession.isSuspended()) {
+                            response.success = false;
+                            sendResponse(response);
+                            return;
+                        }
+                        isolateSession.suspend();
+                        isolateWithState.waiting = false;
+                    }
+                }
+                if (!foundWorker) {
+                    response.success = false;
+                }
             }
         } catch (NoResponseException e) {
             response.success = false;
@@ -1232,30 +1386,52 @@ public class SWFDebugSession extends DebugSession {
         sendResponse(response);
     }
 
+    private Frame[] getFramesForThread(int threadID) {
+        try {
+            if (threadID == Isolate.DEFAULT_ID) {
+                return swfSession.getFrames();
+            }
+            //worker
+            for (IsolateWithState isolateWithState : isolates) {
+                Isolate isolate = isolateWithState.isolate;
+                if (threadID == isolate.getId()) {
+                    IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                    return isolateSession.getFrames();
+                }
+            }
+            return null;
+        } catch (NotConnectedException e) {
+            return null;
+        }
+    }
+
     public void stackTrace(Response response, StackTraceRequest.StackTraceArguments arguments) {
         List<StackFrame> stackFrames = new ArrayList<>();
-        try {
-            Frame[] swfFrames = swfSession.getFrames();
-            for (int i = 0, count = swfFrames.length; i < count; i++) {
-                Frame swfFrame = swfFrames[i];
-                Location location = swfFrame.getLocation();
-                SourceFile file = location.getFile();
-                StackFrame stackFrame = new StackFrame();
-                stackFrame.id = i;
-                stackFrame.name = swfFrame.getCallSignature();
-                if (file != null) {
-                    Source source = sourceFileToSource(file);
-                    stackFrame.source = source;
-                    stackFrame.line = location.getLine();
-                    //location doesn't include column
-                    //use 1 as the default since that's required to show
-                    //exception info (0 won't work)
-                    stackFrame.column = 1;
-                }
-                stackFrames.add(stackFrame);
+        int threadId = arguments.threadId;
+        Frame[] swfFrames = getFramesForThread(threadId);
+        if (swfFrames == null) {
+            response.success = false;
+            sendResponse(response);
+            return;
+        }
+        for (int i = 0, count = swfFrames.length; i < count; i++) {
+            Frame swfFrame = swfFrames[i];
+            Location location = swfFrame.getLocation();
+            SourceFile file = location.getFile();
+            StackFrame stackFrame = new StackFrame();
+            //this is a hacky way to store the threadId
+            stackFrame.id = i + (threadId * 10000);
+            stackFrame.name = swfFrame.getCallSignature();
+            if (file != null) {
+                Source source = sourceFileToSource(file);
+                stackFrame.source = source;
+                stackFrame.line = location.getLine();
+                //location doesn't include column
+                //use 1 as the default since that's required to show
+                //exception info (0 won't work)
+                stackFrame.column = 1;
             }
-        } catch (NotConnectedException e) {
-            //ignore
+            stackFrames.add(stackFrame);
         }
         sendResponse(response, new StackTraceResponseBody(stackFrames));
     }
@@ -1263,8 +1439,15 @@ public class SWFDebugSession extends DebugSession {
     public void scopes(Response response, ScopesRequest.ScopesArguments arguments) {
         List<Scope> scopes = new ArrayList<>();
         int frameId = arguments.frameId;
-        try {
-            Frame[] swfFrames = swfSession.getFrames();
+        int threadId = frameId / 10000;
+        frameId %= 10000;
+        if (threadId == Isolate.DEFAULT_ID) {
+            Frame[] swfFrames = getFramesForThread(threadId);
+            if (swfFrames == null) {
+                response.success = false;
+                sendResponse(response);
+                return;
+            }
             if (frameId >= 0 && frameId < swfFrames.length) {
                 if (previousFaultEvent != null) {
                     ExceptionFault fault = (ExceptionFault) previousFaultEvent;
@@ -1280,8 +1463,6 @@ public class SWFDebugSession extends DebugSession {
                 localScope.variablesReference = frameId * 10 + LOCAL_VARIABLES_REFERENCE;
                 scopes.add(localScope);
             }
-        } catch (PlayerDebugException e) {
-            //ignore and return no scopes
         }
 
         sendResponse(response, new ScopesResponseBody(scopes));
@@ -1364,7 +1545,7 @@ public class SWFDebugSession extends DebugSession {
             long variablesReference) throws PlayerDebugException {
         flash.tools.debugger.Variable[] members = null;
         if (variablesReference == LOCAL_VARIABLES_REFERENCE) {
-            Frame[] swfFrames = swfSession.getFrames();
+            Frame[] swfFrames = getFramesForThread(Isolate.DEFAULT_ID);
             if (frameId >= 0 && frameId < swfFrames.length) {
                 Frame swfFrame = swfFrames[frameId];
                 flash.tools.debugger.Variable[] args = swfFrame.getArguments(swfSession);
