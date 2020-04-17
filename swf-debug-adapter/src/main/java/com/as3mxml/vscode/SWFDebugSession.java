@@ -1566,6 +1566,10 @@ public class SWFDebugSession extends DebugSession {
         }
     }
 
+    /**
+     * Frames don't have a global id, so we need to combine a value with the
+     * isolate/worker id to be able to figure out which one to reference.
+     */
     private class IsolateAndFrame {
         private static final int FRAME_MULTIPLIER = 100;
         private static final int ISOLATE_MULTIPLIER = 1;
@@ -1589,6 +1593,10 @@ public class SWFDebugSession extends DebugSession {
         }
     }
 
+    /**
+     * Values from isolates cannot be accessed from the main session, so we need
+     * to encode the frame and isolate/worker id with the value id.
+     */
     private class IsolateFrameAndVariable {
         private static final long VALUE_MULTIPLIER = 10000L;
         private static final long FRAME_MULTIPLIER = 100L;
