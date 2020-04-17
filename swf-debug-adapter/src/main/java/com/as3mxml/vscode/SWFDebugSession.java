@@ -171,7 +171,8 @@ public class SWFDebugSession extends DebugSession {
         }
 
         public Isolate isolate;
-        public boolean waiting = false;
+        public boolean waitingForResume = false;
+        public FaultEvent previousFaultEvent = null;
     }
 
     private class PendingBreakpoints {
@@ -247,7 +248,7 @@ public class SWFDebugSession extends DebugSession {
                     for (IsolateWithState isolateWithState : isolates) {
                         Isolate isolate = isolateWithState.isolate;
                         IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
-                        while (isolateSession.isSuspended() && !isolateWithState.waiting) {
+                        while (isolateSession.isSuspended() && !isolateWithState.waitingForResume) {
                             handleIsolateSuspended(isolateWithState);
                         }
                     }
@@ -288,23 +289,33 @@ public class SWFDebugSession extends DebugSession {
                 sendEvent(new OutputEvent(body));
             } else if (event instanceof FaultEvent) {
                 FaultEvent faultEvent = (FaultEvent) event;
+                if (faultEvent.isolateId == Isolate.DEFAULT_ID) {
+                    previousFaultEvent = faultEvent;
+                } else {
+                    for (IsolateWithState isolateWithState : isolates) {
+                        if (faultEvent.isolateId == isolateWithState.isolate.getId()) {
+                            isolateWithState.previousFaultEvent = faultEvent;
+                            break;
+                        }
+                    }
+                }
                 String output = faultEvent.information + "\n" + faultEvent.stackTrace();
                 if (output.charAt(output.length() - 1) != '\n') {
                     output += '\n';
                 }
                 OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                populateLocationInOutputBody(body);
+                populateLocationInOutputBody(faultEvent.isolateId, body);
                 body.output = output;
                 body.category = OutputEvent.CATEGORY_STDERR;
                 sendEvent(new OutputEvent(body));
-                previousFaultEvent = faultEvent;
+
             } else if (event instanceof BreakEvent) {
                 BreakEvent breakEvent = (BreakEvent) event;
                 for (LogLocation logLocation : savedLogLocations.values()) {
                     Location location = logLocation.location;
                     if (breakEvent.fileId == location.getFile().getId() && breakEvent.line == location.getLine()) {
                         OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                        populateLocationInOutputBody(body);
+                        populateLocationInOutputBody(breakEvent.isolateId, body);
                         body.output = logLocation.logMessage;
                         sendEvent(new OutputEvent(body));
                         return true;
@@ -434,8 +445,8 @@ public class SWFDebugSession extends DebugSession {
                     body = new StoppedEvent.StoppedBody();
                     body.reason = StoppedEvent.REASON_EXCEPTION;
                     body.description = "Paused on exception";
-                    if (previousFaultEvent != null) {
-                        body.text = previousFaultEvent.information;
+                    if (isolateWithState.previousFaultEvent != null) {
+                        body.text = isolateWithState.previousFaultEvent.information;
                     }
                     break;
                 }
@@ -452,15 +463,15 @@ public class SWFDebugSession extends DebugSession {
                 }
             }
             if (body != null) {
-                isolateWithState.waiting = true;
+                isolateWithState.waitingForResume = true;
                 body.threadId = isolate.getId();
                 sendEvent(new StoppedEvent(body));
             }
         }
 
-        private void populateLocationInOutputBody(OutputEvent.OutputBody body) {
+        private void populateLocationInOutputBody(int isolateId, OutputEvent.OutputBody body) {
             try {
-                Frame[] swfFrames = swfSession.getFrames();
+                Frame[] swfFrames = getFramesForIsolate(isolateId);
                 if (swfFrames.length > 0) {
                     Frame swfFrame = swfFrames[0];
                     Location location = swfFrame.getLocation();
@@ -943,7 +954,7 @@ public class SWFDebugSession extends DebugSession {
         try {
             refreshPendingBreakpoints();
             swfSession.resume();
-            stopWaitingForResume();
+            stopWaitingForResume(Isolate.DEFAULT_ID);
             configDone = true;
         } catch (NotSuspendedException e) {
             StringWriter writer = new StringWriter();
@@ -1168,7 +1179,7 @@ public class SWFDebugSession extends DebugSession {
                     return;
                 }
                 swfSession.resume();
-                stopWaitingForResume();
+                stopWaitingForResume(Isolate.DEFAULT_ID);
             } else {
                 // worker
                 boolean foundWorker = false;
@@ -1183,7 +1194,7 @@ public class SWFDebugSession extends DebugSession {
                             return;
                         }
                         isolateSession.resume();
-                        isolateWithState.waiting = false;
+                        stopWaitingForResume(isolate.getId());
                     }
                 }
                 if (!foundWorker) {
@@ -1214,7 +1225,7 @@ public class SWFDebugSession extends DebugSession {
                     return;
                 }
                 swfSession.stepOver();
-                stopWaitingForResume();
+                stopWaitingForResume(Isolate.DEFAULT_ID);
             } else {
                 // worker
                 boolean foundWorker = false;
@@ -1229,7 +1240,7 @@ public class SWFDebugSession extends DebugSession {
                             return;
                         }
                         isolateSession.stepOver();
-                        isolateWithState.waiting = false;
+                        stopWaitingForResume(isolate.getId());
                     }
                 }
                 if (!foundWorker) {
@@ -1260,7 +1271,7 @@ public class SWFDebugSession extends DebugSession {
                     return;
                 }
                 swfSession.stepInto();
-                stopWaitingForResume();
+                stopWaitingForResume(Isolate.DEFAULT_ID);
             } else {
                 // worker
                 boolean foundWorker = false;
@@ -1275,7 +1286,7 @@ public class SWFDebugSession extends DebugSession {
                             return;
                         }
                         isolateSession.stepInto();
-                        isolateWithState.waiting = false;
+                        stopWaitingForResume(isolate.getId());
                     }
                 }
                 if (!foundWorker) {
@@ -1306,7 +1317,7 @@ public class SWFDebugSession extends DebugSession {
                     return;
                 }
                 swfSession.stepOut();
-                stopWaitingForResume();
+                stopWaitingForResume(Isolate.DEFAULT_ID);
             } else {
                 // worker
                 boolean foundWorker = false;
@@ -1321,7 +1332,7 @@ public class SWFDebugSession extends DebugSession {
                             return;
                         }
                         isolateSession.stepOut();
-                        isolateWithState.waiting = false;
+                        stopWaitingForResume(isolate.getId());
                     }
                 }
                 if (!foundWorker) {
@@ -1352,7 +1363,7 @@ public class SWFDebugSession extends DebugSession {
                     return;
                 }
                 swfSession.suspend();
-                stopWaitingForResume();
+                stopWaitingForResume(Isolate.DEFAULT_ID);
             } else {
                 // worker
                 boolean foundWorker = false;
@@ -1367,7 +1378,7 @@ public class SWFDebugSession extends DebugSession {
                             return;
                         }
                         isolateSession.suspend();
-                        isolateWithState.waiting = false;
+                        stopWaitingForResume(isolate.getId());
                     }
                 }
                 if (!foundWorker) {
@@ -1440,23 +1451,23 @@ public class SWFDebugSession extends DebugSession {
             return;
         }
         if (isolateAndFrame.frameId >= 0 && isolateAndFrame.frameId < swfFrames.length) {
-            if (previousFaultEvent != null) {
-                ExceptionFault fault = (ExceptionFault) previousFaultEvent;
+            FaultEvent faultEvent = getPreviousFaultEvent(isolateAndFrame.isolateId);
+            if (faultEvent != null) {
+                ExceptionFault fault = (ExceptionFault) faultEvent;
                 Value thrownValue = fault.getThrownValue();
-                IsolateFrameAndVariable faultVarsReference = new IsolateFrameAndVariable(Isolate.DEFAULT_ID, 0,
+                IsolateAndFrameOrValue faultIsolateAndFrameOrValue = new IsolateAndFrameOrValue(Isolate.DEFAULT_ID, 0,
                         thrownValue.getId());
                 Scope exceptionScope = new Scope();
                 exceptionScope.name = "Exception";
-                exceptionScope.variablesReference = faultVarsReference.toVariablesReference();
+                exceptionScope.variablesReference = faultIsolateAndFrameOrValue.toVariablesReference();
                 scopes.add(exceptionScope);
             }
 
             Scope localScope = new Scope();
             localScope.name = "Locals";
-            //this is a hacky way to store the frameId
-            IsolateFrameAndVariable variablesReference = new IsolateFrameAndVariable(isolateAndFrame.isolateId,
+            IsolateAndFrameOrValue isolateAndFrameOrValue = new IsolateAndFrameOrValue(isolateAndFrame.isolateId,
                     isolateAndFrame.frameId, LOCALS_VALUE_ID);
-            localScope.variablesReference = variablesReference.toVariablesReference();
+            localScope.variablesReference = isolateAndFrameOrValue.toVariablesReference();
             scopes.add(localScope);
         }
 
@@ -1487,28 +1498,28 @@ public class SWFDebugSession extends DebugSession {
     public void variables(Response response, VariablesRequest.VariablesArguments arguments) {
         List<Variable> variables = new ArrayList<>();
         try {
-            IsolateFrameAndVariable variablesReference = new IsolateFrameAndVariable(arguments.variablesReference);
-            flash.tools.debugger.Variable[] members = getVariables(variablesReference);
-            mapMembersToVariables(variablesReference, members, variables);
+            IsolateAndFrameOrValue isolateAndFrameOrValue = new IsolateAndFrameOrValue(arguments.variablesReference);
+            flash.tools.debugger.Variable[] members = getVariables(isolateAndFrameOrValue);
+            mapMembersToVariables(isolateAndFrameOrValue, members, variables);
         } catch (PlayerDebugException e) {
             //ignore
         }
         sendResponse(response, new VariablesResponseBody(variables));
     }
 
-    private void mapMembersToVariables(IsolateFrameAndVariable variablesReference,
+    private void mapMembersToVariables(IsolateAndFrameOrValue isolateAndFrameOrValue,
             flash.tools.debugger.Variable[] members, List<Variable> result) throws PlayerDebugException {
         boolean isThis = false;
-        IsolateSession isolateSession = getIsolateSession(variablesReference.isolateId);
+        IsolateSession isolateSession = getIsolateSession(isolateAndFrameOrValue.isolateId);
         if (isolateSession != null) {
             Value swfThisValue = isolateSession.getValue(Value.THIS_ID);
             if (swfThisValue != null) {
-                isThis = swfThisValue.getId() == variablesReference.valueId;
+                isThis = swfThisValue.getId() == isolateAndFrameOrValue.valueId;
             }
         } else if (swfSession.isSuspended()) {
             Value swfThisValue = swfSession.getValue(Value.THIS_ID);
             if (swfThisValue != null) {
-                isThis = swfThisValue.getId() == variablesReference.valueId;
+                isThis = swfThisValue.getId() == isolateAndFrameOrValue.valueId;
             }
         }
         for (flash.tools.debugger.Variable member : members) {
@@ -1520,17 +1531,17 @@ public class SWFDebugSession extends DebugSession {
             Variable variable = new Variable();
             variable.name = member.getName();
             variable.type = memberValue.getTypeName();
-            if (variablesReference.valueId == LOCALS_VALUE_ID) {
+            if (isolateAndFrameOrValue.valueId == LOCALS_VALUE_ID) {
                 variable.evaluateName = member.getName();
             } else if (isThis) {
                 variable.evaluateName = "this." + member.getName();
             }
             long id = memberValue.getId();
             if (id != Value.UNKNOWN_ID) {
-                IsolateFrameAndVariable memberVarsReference = new IsolateFrameAndVariable(variablesReference.isolateId,
-                        variablesReference.frameId, memberValue.getId());
+                IsolateAndFrameOrValue memberIsolateAndFrameOrValue = new IsolateAndFrameOrValue(
+                        isolateAndFrameOrValue.isolateId, isolateAndFrameOrValue.frameId, memberValue.getId());
                 variable.value = memberValue.getTypeName();
-                variable.variablesReference = memberVarsReference.toVariablesReference();
+                variable.variablesReference = memberIsolateAndFrameOrValue.toVariablesReference();
             } else {
                 if (memberValue.getType() == VariableType.STRING) {
                     variable.value = "\"" + memberValue.getValueAsString() + "\"";
@@ -1597,12 +1608,12 @@ public class SWFDebugSession extends DebugSession {
      * Values from isolates cannot be accessed from the main session, so we need
      * to encode the frame and isolate/worker id with the value id.
      */
-    private class IsolateFrameAndVariable {
+    private class IsolateAndFrameOrValue {
         private static final long VALUE_MULTIPLIER = 10000L;
         private static final long FRAME_MULTIPLIER = 100L;
         private static final long ISOLATE_MULTIPLIER = 1L;
 
-        public IsolateFrameAndVariable(long variablesReference) {
+        public IsolateAndFrameOrValue(long variablesReference) {
             valueId = variablesReference / VALUE_MULTIPLIER;
             variablesReference -= valueId * VALUE_MULTIPLIER;
             frameId = (int) (variablesReference / FRAME_MULTIPLIER);
@@ -1610,7 +1621,7 @@ public class SWFDebugSession extends DebugSession {
             isolateId = (int) (variablesReference / ISOLATE_MULTIPLIER);
         }
 
-        public IsolateFrameAndVariable(int isolateId, int frameId, long valueId) {
+        public IsolateAndFrameOrValue(int isolateId, int frameId, long valueId) {
             this.isolateId = isolateId;
             this.frameId = frameId;
             this.valueId = valueId;
@@ -1633,7 +1644,7 @@ public class SWFDebugSession extends DebugSession {
             int memberCount = locals.length + args.length;
             int offset = 0;
             if (swfThis != null) {
-                offset = 1;
+                offset++;
             }
             flash.tools.debugger.Variable[] members = new flash.tools.debugger.Variable[memberCount + offset];
             if (swfThis != null) {
@@ -1647,19 +1658,19 @@ public class SWFDebugSession extends DebugSession {
         }
     }
 
-    private flash.tools.debugger.Variable[] getVariables(IsolateFrameAndVariable variablesReference) {
+    private flash.tools.debugger.Variable[] getVariables(IsolateAndFrameOrValue isolateAndFrameOrValue) {
         try {
-            if (variablesReference.valueId == LOCALS_VALUE_ID) {
-                Frame[] frames = getFramesForIsolate(variablesReference.isolateId);
-                Frame frameWithLocals = frames[variablesReference.frameId];
+            if (isolateAndFrameOrValue.valueId == LOCALS_VALUE_ID) {
+                Frame[] frames = getFramesForIsolate(isolateAndFrameOrValue.isolateId);
+                Frame frameWithLocals = frames[isolateAndFrameOrValue.frameId];
                 return getVariablesForFrame(frameWithLocals);
             }
             Value swfValue = null;
-            IsolateSession isolateSession = getIsolateSession(variablesReference.isolateId);
+            IsolateSession isolateSession = getIsolateSession(isolateAndFrameOrValue.isolateId);
             if (isolateSession != null) {
-                swfValue = isolateSession.getValue(variablesReference.valueId);
+                swfValue = isolateSession.getValue(isolateAndFrameOrValue.valueId);
             } else if (swfSession.isSuspended()) {
-                swfValue = swfSession.getValue(variablesReference.valueId);
+                swfValue = swfSession.getValue(isolateAndFrameOrValue.valueId);
             }
             if (swfValue != null) {
                 return swfValue.getMembers(swfSession);
@@ -1670,7 +1681,7 @@ public class SWFDebugSession extends DebugSession {
         return new flash.tools.debugger.Variable[0];
     }
 
-    private flash.tools.debugger.Variable getMemberByName(IsolateFrameAndVariable variablesReference, String name)
+    private flash.tools.debugger.Variable getMemberByName(IsolateAndFrameOrValue variablesReference, String name)
             throws PlayerDebugException {
         flash.tools.debugger.Variable[] members = getVariables(variablesReference);
         if (members != null) {
@@ -1684,10 +1695,10 @@ public class SWFDebugSession extends DebugSession {
     }
 
     public void setVariable(Response response, SetVariableRequest.SetVariableArguments arguments) {
-        IsolateFrameAndVariable variablesReference = new IsolateFrameAndVariable(arguments.variablesReference);
+        IsolateAndFrameOrValue isolateAndFrameOrValue = new IsolateAndFrameOrValue(arguments.variablesReference);
 
         try {
-            flash.tools.debugger.Variable member = getMemberByName(variablesReference, arguments.name);
+            flash.tools.debugger.Variable member = getMemberByName(isolateAndFrameOrValue, arguments.name);
             if (member != null) {
                 Value memberValue = member.getValue();
                 FaultEvent faultEvent = null;
@@ -1707,16 +1718,16 @@ public class SWFDebugSession extends DebugSession {
 
                 if (setValue) {
                     //need to get it again to access the new value
-                    member = getMemberByName(variablesReference, arguments.name);
+                    member = getMemberByName(isolateAndFrameOrValue, arguments.name);
                     memberValue = member.getValue();
                     SetVariableResponseBody body = new SetVariableResponseBody();
                     body.type = memberValue.getTypeName();
                     long id = memberValue.getId();
                     if (id != Value.UNKNOWN_ID) {
-                        IsolateFrameAndVariable memberVarsReference = new IsolateFrameAndVariable(
-                                variablesReference.isolateId, variablesReference.frameId, memberValue.getId());
+                        IsolateAndFrameOrValue memberIsolateAndFrameOrValue = new IsolateAndFrameOrValue(
+                                isolateAndFrameOrValue.isolateId, isolateAndFrameOrValue.frameId, memberValue.getId());
                         body.value = memberValue.getTypeName();
-                        body.variablesReference = memberVarsReference.toVariablesReference();
+                        body.variablesReference = memberIsolateAndFrameOrValue.toVariablesReference();
                     } else {
                         if (memberValue.getType() == VariableType.STRING) {
                             body.value = "\"" + memberValue.getValueAsString() + "\"";
@@ -1764,11 +1775,11 @@ public class SWFDebugSession extends DebugSession {
             sendResponse(response);
             return;
         }
-        IsolateFrameAndVariable isolateAndFrame = new IsolateFrameAndVariable(arguments.frameId);
+        IsolateAndFrameOrValue isolateAndFrameOrValue = new IsolateAndFrameOrValue(arguments.frameId);
         EvaluateResponseBody body = new EvaluateResponseBody();
         Object evaluateResult = null;
         try {
-            Integer frameId = isolateAndFrame.frameId;
+            Integer frameId = isolateAndFrameOrValue.frameId;
             if (frameId != null) {
                 Frame[] swfFrames = swfSession.getFrames();
                 if (frameId >= 0 && frameId < swfFrames.length) {
@@ -1803,10 +1814,10 @@ public class SWFDebugSession extends DebugSession {
         if (value != null) {
             long id = value.getId();
             if (id != Value.UNKNOWN_ID) {
-                IsolateFrameAndVariable valueVarsReference = new IsolateFrameAndVariable(isolateAndFrame.isolateId,
-                        isolateAndFrame.frameId, value.getId());
+                IsolateAndFrameOrValue evaluatedIsolateAndFrameOrValue = new IsolateAndFrameOrValue(
+                        isolateAndFrameOrValue.isolateId, isolateAndFrameOrValue.frameId, value.getId());
                 body.result = value.getTypeName();
-                body.variablesReference = valueVarsReference.toVariablesReference();
+                body.variablesReference = evaluatedIsolateAndFrameOrValue.toVariablesReference();
                 body.type = value.getTypeName();
             } else {
                 if (value.getType() == VariableType.STRING) {
@@ -1830,30 +1841,54 @@ public class SWFDebugSession extends DebugSession {
         sendResponse(response, body);
     }
 
+    public FaultEvent getPreviousFaultEvent(int isolateId) {
+        if (isolateId == Isolate.DEFAULT_ID) {
+            return previousFaultEvent;
+        }
+        for (IsolateWithState isolateWithState : isolates) {
+            if (isolateId == isolateWithState.isolate.getId()) {
+                return isolateWithState.previousFaultEvent;
+            }
+        }
+        return null;
+    }
+
     public void exceptionInfo(Response response, ExceptionInfoRequest.ExceptionInfoArguments arguments) {
-        if (previousFaultEvent == null) {
+        int isolateId = arguments.threadId;
+        FaultEvent faultEvent = getPreviousFaultEvent(isolateId);
+        if (faultEvent == null) {
             sendResponse(response);
             return;
         }
 
         String typeName = null;
-        if (previousFaultEvent instanceof ExceptionFault) {
-            ExceptionFault exceptionFault = (ExceptionFault) previousFaultEvent;
+        if (faultEvent instanceof ExceptionFault) {
+            ExceptionFault exceptionFault = (ExceptionFault) faultEvent;
             Value thrownValue = exceptionFault.getThrownValue();
             typeName = thrownValue.getTypeName();
         }
 
         ExceptionDetails details = new ExceptionDetails();
-        details.message = previousFaultEvent.information;
-        details.stackTrace = previousFaultEvent.stackTrace();
+        details.message = faultEvent.information;
+        details.stackTrace = faultEvent.stackTrace();
         details.typeName = typeName;
         sendResponse(response, new ExceptionInfoResponseBody(null,
-                ExceptionInfoResponseBody.EXCEPTION_BREAK_MODE_ALWAYS, previousFaultEvent.information, details));
+                ExceptionInfoResponseBody.EXCEPTION_BREAK_MODE_ALWAYS, faultEvent.information, details));
     }
 
-    private void stopWaitingForResume() {
-        waitingForResume = false;
-        previousFaultEvent = null;
+    private void stopWaitingForResume(int isolateId) {
+        if (isolateId == Isolate.DEFAULT_ID) {
+            waitingForResume = false;
+            //previousFaultEvent = null;
+        } else {
+            for (IsolateWithState isolateWithState : isolates) {
+                if (isolateWithState.isolate.getId() == isolateId) {
+                    isolateWithState.waitingForResume = false;
+                    //isolateWithState.previousFaultEvent = null;
+                    break;
+                }
+            }
+        }
     }
 
     protected String transformPath(String sourceFilePath) {
