@@ -71,17 +71,17 @@ export default class SWFDebugConfigurationProvider
       {
         type: "swf",
         request: "launch",
-        name: "Launch SWF"
-      }
+        name: "Launch SWF",
+      },
     ];
     return initialConfigurations;
   }
 
-  async resolveDebugConfiguration?(
+  resolveDebugConfiguration?(
     workspaceFolder: vscode.WorkspaceFolder | undefined,
     debugConfiguration: SWFDebugConfiguration,
     token?: vscode.CancellationToken
-  ): Promise<SWFDebugConfiguration> {
+  ): SWFDebugConfiguration {
     let paths = this.pathsCallback();
     if (!paths) {
       throw new Error("SWF debugger launch failed. Internal error.");
@@ -444,8 +444,8 @@ export default class SWFDebugConfigurationProvider
             result.push(
               ...fs
                 .readdirSync(newItem)
-                .filter(child => child.endsWith(FILE_EXTENSION_ANE))
-                .map(child => path.resolve(newItem, child))
+                .filter((child) => child.endsWith(FILE_EXTENSION_ANE))
+                .map((child) => path.resolve(newItem, child))
             );
           }
           return result;
