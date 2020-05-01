@@ -1,5 +1,18 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.2.0
+
+### New Features
+
+- Workers: Pause, resume, step into, step over, and step out for workers.
+- Stack: When worker stops on a breakpoint or exception, display the worker's stack trace.
+- Variables: When a worker stops on a breakpoint or exception, list the variables in the current scope.
+
+### Fixed Issues
+
+- Breakpoints: Fixed issue where breakpoints added in document class constructor were ignored.
+- General: Fixed issue where an error response to a request that fails incorrectly displayed a token instead of the real text.
+
 ## v1.1.2
 
 ### Fixed Issues
