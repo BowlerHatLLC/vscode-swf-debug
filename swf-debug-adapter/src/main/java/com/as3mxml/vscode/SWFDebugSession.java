@@ -27,6 +27,7 @@ import java.lang.reflect.Type;
 import java.net.ConnectException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
@@ -988,9 +989,17 @@ public class SWFDebugSession extends DebugSession {
             for (SwfInfo swf : swfs) {
                 SourceFile[] sourceFiles = swf.getSourceList(swfSession);
                 for (SourceFile sourceFile : sourceFiles) {
+                    Path sourceFilePath = null;
+                    try {
+                        String sourceFileFullPath = sourceFile.getFullPath();
+                        sourceFilePath = Paths.get(sourceFileFullPath);
+                    } catch (InvalidPathException e) {
+                        badExtension = true;
+                        continue;
+                    }
                     //we can't check if the String paths are equal due to
                     //file system case sensitivity.
-                    if (pathAsPath.equals(Paths.get(sourceFile.getFullPath()))) {
+                    if (pathAsPath.equals(sourceFilePath)) {
                         if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)
                                 || path.endsWith(FILE_EXTENSION_HX)) {
                             foundSourceFile = sourceFile;
@@ -1012,9 +1021,17 @@ public class SWFDebugSession extends DebugSession {
                     for (SwfInfo swf : swfs) {
                         SourceFile[] sourceFiles = swf.getSourceList(swfSession);
                         for (SourceFile sourceFile : sourceFiles) {
+                            Path sourceFilePath = null;
+                            try {
+                                String sourceFileFullPath = sourceFile.getFullPath();
+                                sourceFilePath = Paths.get(sourceFileFullPath);
+                            } catch (InvalidPathException e) {
+                                badExtension = true;
+                                continue;
+                            }
                             //we can't check if the String paths are equal due to
                             //file system case sensitivity.
-                            if (pathAsPath.equals(Paths.get(sourceFile.getFullPath()))) {
+                            if (pathAsPath.equals(sourceFilePath)) {
                                 if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)
                                         || path.endsWith(FILE_EXTENSION_HX)) {
                                     foundSourceFile = sourceFile;

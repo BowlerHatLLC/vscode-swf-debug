@@ -1,5 +1,11 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.2.1
+
+### Fixed Issues
+
+- Breakpoints: Fixed issue where adding breakpoints to a SWF with frame scripts added in Adobe Animate could result in an InvalidPathException.
+
 ## v1.2.0
 
 ### New Features
