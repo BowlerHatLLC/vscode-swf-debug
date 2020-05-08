@@ -20,7 +20,7 @@ limitations under the License.
 
   <groupId>com.as3mxml.vscode</groupId>
   <artifactId>vscode-swf-debug</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
   <name>vscode-swf-debug</name>
   <packaging>pom</packaging>
 
