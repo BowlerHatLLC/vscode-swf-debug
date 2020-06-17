@@ -163,7 +163,8 @@ public class SWFDebugSession extends DebugSession {
     private int nextBreakpointID = 1;
     private String forwardedPortPlatform = null;
     private int forwardedPort = -1;
-    private Long mainSwfId = null;
+    private Integer mainSwfIndex = null;
+    private String mainSwfPath = null;
     private boolean configDone = false;
 
     private class IsolateWithState {
@@ -238,9 +239,13 @@ public class SWFDebugSession extends DebugSession {
                         if (handleEvent(event)) {
                             logPoint = true;
                         }
+                        if (cancelRunner) {
+                            //this might get set when handling the event
+                            break;
+                        }
                     }
                     if (cancelRunner) {
-                        //this might get set when handling the events
+                        //this might get set when handling one of the events
                         break;
                     }
                     while (swfSession.isSuspended() && !waitingForResume) {
@@ -349,13 +354,14 @@ public class SWFDebugSession extends DebugSession {
                 sendEvent(new ThreadEvent(body));
             } else if (event instanceof SwfLoadedEvent) {
                 SwfLoadedEvent loadEvent = (SwfLoadedEvent) event;
-                if (mainSwfId == null) {
-                    mainSwfId = loadEvent.id;
+                if (mainSwfPath == null) {
+                    mainSwfPath = loadEvent.path;
+                    mainSwfIndex = loadEvent.index;
                 }
                 refreshPendingBreakpoints();
             } else if (event instanceof SwfUnloadedEvent) {
                 SwfUnloadedEvent unloadEvent = (SwfUnloadedEvent) event;
-                if (unloadEvent.id == mainSwfId) {
+                if (unloadEvent.path.equals(mainSwfPath) && unloadEvent.index == mainSwfIndex) {
                     cancelRunner = true;
                     sendEvent(new TerminatedEvent());
                 }
