@@ -211,7 +211,7 @@ public class SWFDebugSession extends DebugSession {
                     cancelRunner = true;
                     sendEvent(new TerminatedEvent());
                 } catch (IllegalThreadStateException e) {
-                    //safe to ignore
+                    // safe to ignore
                 }
                 try {
                     java.lang.Thread.sleep(50);
@@ -240,12 +240,12 @@ public class SWFDebugSession extends DebugSession {
                             logPoint = true;
                         }
                         if (cancelRunner) {
-                            //this might get set when handling the event
+                            // this might get set when handling the event
                             break;
                         }
                     }
                     if (cancelRunner) {
-                        //this might get set when handling one of the events
+                        // this might get set when handling one of the events
                         break;
                     }
                     while (swfSession.isSuspended() && !waitingForResume) {
@@ -282,15 +282,15 @@ public class SWFDebugSession extends DebugSession {
                 TraceEvent traceEvent = (TraceEvent) event;
                 String output = traceEvent.information;
                 if (output.length() == 0) {
-                    //empty string or empty line added with \n
+                    // empty string or empty line added with \n
                     output = "\n";
                 } else if (output.charAt(output.length() - 1) != '\n') {
                     output += '\n';
                 }
                 OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                //we can't populate the location for a trace() to the
-                //console because the result of getFrames() is empty
-                //when the runtime isn't suspended
+                // we can't populate the location for a trace() to the
+                // console because the result of getFrames() is empty
+                // when the runtime isn't suspended
                 body.output = output;
                 sendEvent(new OutputEvent(body));
             } else if (event instanceof FaultEvent) {
@@ -328,7 +328,7 @@ public class SWFDebugSession extends DebugSession {
                     }
                 }
             } else if (event instanceof IsolateCreateEvent) {
-                //a worker has been created
+                // a worker has been created
                 IsolateCreateEvent isolateEvent = (IsolateCreateEvent) event;
                 Isolate isolate = isolateEvent.isolate;
                 IsolateWithState isolateWithState = new IsolateWithState(isolate);
@@ -343,7 +343,7 @@ public class SWFDebugSession extends DebugSession {
 
                 refreshPendingBreakpoints();
             } else if (event instanceof IsolateExitEvent) {
-                //a worker has exited
+                // a worker has exited
                 IsolateExitEvent isolateEvent = (IsolateExitEvent) event;
                 Isolate isolate = isolateEvent.isolate;
                 isolates.removeIf((isolateWithState) -> isolate.equals(isolateWithState.isolate));
@@ -382,7 +382,7 @@ public class SWFDebugSession extends DebugSession {
                             waitingForResume = true;
                         }
                     } else {
-                        //initialize when the first script is loaded
+                        // initialize when the first script is loaded
                         initialized = true;
                         sendEvent(new InitializedEvent());
                     }
@@ -390,8 +390,8 @@ public class SWFDebugSession extends DebugSession {
                 }
                 case SuspendReason.Breakpoint: {
                     if (logPoint) {
-                        //if it was a logpoint, then resume
-                        //immediately because we should not stop
+                        // if it was a logpoint, then resume
+                        // immediately because we should not stop
                         swfSession.resume();
                     } else {
                         body = new StoppedEvent.StoppedBody();
@@ -562,8 +562,8 @@ public class SWFDebugSession extends DebugSession {
                 if (!program.startsWith("http:") && !program.startsWith("https:")) {
                     Path programPath = Paths.get(program);
                     if (!programPath.isAbsolute()) {
-                        //if it's not an absolute path, we'll treat it as a
-                        //relative path within the workspace
+                        // if it's not an absolute path, we'll treat it as a
+                        // relative path within the workspace
                         String workspacePath = System.getProperty(WORKSPACE_PROPERTY);
                         if (workspacePath != null) {
                             program = Paths.get(workspacePath).resolve(programPath).toAbsolutePath().toString();
@@ -613,29 +613,29 @@ public class SWFDebugSession extends DebugSession {
                 Player player = null;
                 CustomRuntimeLauncher launcher = null;
                 if (swfArgs.runtimeExecutable != null) {
-                    //if runtimeExecutable is specified, we'll launch that
+                    // if runtimeExecutable is specified, we'll launch that
                     launcher = new CustomRuntimeLauncher(swfArgs.runtimeExecutable, swfArgs.runtimeArgs);
                     if (airLaunchInfo != null) {
                         launcher.isAIR = true;
                     }
                 } else {
-                    //otherwise, let the SWF debugger automatically figure out
-                    //which runtime is required based on the program path
+                    // otherwise, let the SWF debugger automatically figure out
+                    // which runtime is required based on the program path
                     String playerPath = program;
                     try {
 
                         URI uri = Paths.get(playerPath).toUri();
                         playerPath = uri.toString();
                     } catch (Exception e) {
-                        //safe to ignore
+                        // safe to ignore
                     }
                     player = manager.playerForUri(playerPath, airLaunchInfo);
                     if (player == null && !playerPath.startsWith("http:") && !playerPath.startsWith("https:")
                             && playerPath.endsWith(".swf")) {
-                        //fallback: try to find standalone Flash Player
+                        // fallback: try to find standalone Flash Player
                         if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
                             launcher = findWindowsStandalonePlayer();
-                        } else if (!System.getProperty("os.name").toLowerCase().startsWith("mac os")) //linux
+                        } else if (!System.getProperty("os.name").toLowerCase().startsWith("mac os")) // linux
                         {
                             launcher = findLinuxStandalonePlayer();
                         }
@@ -654,9 +654,9 @@ public class SWFDebugSession extends DebugSession {
                         swfRunProcess = manager.launchForRun(program, airLaunchInfo, null, new RunLaunchNotification());
                     }
                 } else {
-                    //notice that we use the value of launcher if it isn't null, but
-                    //we don't actually use the value of player. player's purpose is
-                    //more about verifying that a runtime can be auto-detected.
+                    // notice that we use the value of launcher if it isn't null, but
+                    // we don't actually use the value of player. player's purpose is
+                    // more about verifying that a runtime can be auto-detected.
                     if (launcher != null) {
                         swfSession = (ThreadSafeSession) manager.launch(program, airLaunchInfo, !swfArgs.noDebug, null,
                                 null, launcher);
@@ -722,8 +722,8 @@ public class SWFDebugSession extends DebugSession {
 
     /**
      * On Windows, if the standalone Flash Player wasn't found by the debugger,
-     * we're going try one last thing. We check the registry to see if the user
-     * made a file association in explorer.
+     * we're going try one last thing. We check the registry to see if the user made
+     * a file association in explorer.
      */
     private CustomRuntimeLauncher findWindowsStandalonePlayer() {
         try {
@@ -736,23 +736,23 @@ public class SWFDebugSession extends DebugSession {
                         .queryWindowsRegistry("HKEY_CLASSES_ROOT\\" + association + "\\shell\\open\\command", null);
                 if (path != null) {
                     if (path.startsWith("\"")) {
-                        //strip any quotes that might be wrapping
-                        //the executable path
+                        // strip any quotes that might be wrapping
+                        // the executable path
                         path = path.substring(1, path.indexOf("\"", 1));
                     }
                     return new CustomRuntimeLauncher(path);
                 }
             }
         } catch (IOException e) {
-            //safe to ignore
+            // safe to ignore
         }
         return null;
     }
 
     /**
-     * On Linux, if the standalone Flash Player wasn't found by the debugger,
-     * we're going try one last thing. We check a different default file name
-     * that might exist that the debugger doesn't know about.
+     * On Linux, if the standalone Flash Player wasn't found by the debugger, we're
+     * going try one last thing. We check a different default file name that might
+     * exist that the debugger doesn't know about.
      */
     private CustomRuntimeLauncher findLinuxStandalonePlayer() {
         try {
@@ -767,7 +767,7 @@ public class SWFDebugSession extends DebugSession {
                 }
             }
         } catch (IOException e) {
-            //safe to ignore
+            // safe to ignore
         }
         return null;
     }
@@ -781,7 +781,7 @@ public class SWFDebugSession extends DebugSession {
             if (swfArgs.bundle != null) {
                 sendOutputEvent("Preparing to install Adobe AIR application...\n");
             }
-            if (swfArgs.applicationID != null && swfArgs.bundle != null //don't uninstall unless also installing
+            if (swfArgs.applicationID != null && swfArgs.bundle != null // don't uninstall unless also installing
                     && !uninstallApp(workspacePath, swfArgs.platform, swfArgs.applicationID)) {
                 response.success = false;
                 sendResponse(response);
@@ -859,13 +859,13 @@ public class SWFDebugSession extends DebugSession {
 
     private boolean launchApp(Path workspacePath, Path adtPath, String platform, String applicationID) {
         if (platform.equals(PLATFORM_IOS)) {
-            //ADT can't launch an iOS application automatically
+            // ADT can't launch an iOS application automatically
             sendOutputEvent(
                     "\033[0;95mDebugger ready to attach. You must launch your application manually on the iOS device.\u001B[0m\n");
             return true;
         }
         if (applicationID == null) {
-            //ADT can't launch an Android application automatically with an ID
+            // ADT can't launch an Android application automatically with an ID
             sendOutputEvent(
                     "\033[0;95mDebugger ready to attach. You must launch your application manually on the Android device.\u001B[0m\n");
             return true;
@@ -986,7 +986,7 @@ public class SWFDebugSession extends DebugSession {
     }
 
     private List<Breakpoint> setBreakpoints(String path, SourceBreakpoint[] breakpoints) {
-        //start by trying to find the file ID for this path
+        // start by trying to find the file ID for this path
         Path pathAsPath = Paths.get(path);
         SourceFile foundSourceFile = null;
         boolean badExtension = false;
@@ -1003,8 +1003,8 @@ public class SWFDebugSession extends DebugSession {
                         badExtension = true;
                         continue;
                     }
-                    //we can't check if the String paths are equal due to
-                    //file system case sensitivity.
+                    // we can't check if the String paths are equal due to
+                    // file system case sensitivity.
                     if (pathAsPath.equals(sourceFilePath)) {
                         if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)
                                 || path.endsWith(FILE_EXTENSION_HX)) {
@@ -1035,8 +1035,8 @@ public class SWFDebugSession extends DebugSession {
                                 badExtension = true;
                                 continue;
                             }
-                            //we can't check if the String paths are equal due to
-                            //file system case sensitivity.
+                            // we can't check if the String paths are equal due to
+                            // file system case sensitivity.
                             if (pathAsPath.equals(sourceFilePath)) {
                                 if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)
                                         || path.endsWith(FILE_EXTENSION_HX)) {
@@ -1066,16 +1066,16 @@ public class SWFDebugSession extends DebugSession {
             sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
         if (foundSourceFile == null && !badExtension) {
-            //the file was not found, but it has a supported extension,
-            //so we'll try to add it again later.
-            //SWF is a streaming format, so not all bytecode is loaded
-            //immediately.
+            // the file was not found, but it has a supported extension,
+            // so we'll try to add it again later.
+            // SWF is a streaming format, so not all bytecode is loaded
+            // immediately.
             pendingBreakpoints.put(path, new PendingBreakpoints(breakpoints));
             foundSourceFile = null;
         }
         try {
-            //clear all old breakpoints for this file because our new list
-            //doesn't specify exactly which ones are cleared
+            // clear all old breakpoints for this file because our new list
+            // doesn't specify exactly which ones are cleared
             for (Location location : swfSession.getBreakpointList()) {
                 if (pathAsPath.equals(Paths.get(location.getFile().getFullPath()))) {
                     swfSession.clearBreakpoint(location);
@@ -1100,11 +1100,11 @@ public class SWFDebugSession extends DebugSession {
             responseBreakpoint.id = nextBreakpointID;
             nextBreakpointID++;
             if (foundSourceFile == null) {
-                //we couldn't find the file, so we can't verify this breakpoint
+                // we couldn't find the file, so we can't verify this breakpoint
                 responseBreakpoint.verified = false;
             } else {
-                //we found the file, so let's try to add this breakpoint
-                //it may not work, but at least we tried!
+                // we found the file, so let's try to add this breakpoint
+                // it may not work, but at least we tried!
                 responseBreakpoint.source = sourceFileToSource(foundSourceFile);
                 try {
                     Location breakpointLocation = swfSession.setBreakpoint(foundSourceFile.getId(), sourceLine);
@@ -1122,9 +1122,9 @@ public class SWFDebugSession extends DebugSession {
                             }
                         }
                     }
-                    //setBreakpoint() may return null if the breakpoint
-                    //could not be set. that's fine. the user will simply
-                    //see that the breakpoint is not verified.
+                    // setBreakpoint() may return null if the breakpoint
+                    // could not be set. that's fine. the user will simply
+                    // see that the breakpoint is not verified.
                 } catch (NoResponseException e) {
                     StringWriter writer = new StringWriter();
                     e.printStackTrace(new PrintWriter(writer));
@@ -1144,8 +1144,8 @@ public class SWFDebugSession extends DebugSession {
 
     private void verifyBreakpoint(String path, Location breakpointLocation, SourceBreakpoint sourceBreakpoint,
             Breakpoint responseBreakpoint) {
-        //I don't know if the line could change, but might as well
-        //use the one returned by the location
+        // I don't know if the line could change, but might as well
+        // use the one returned by the location
         responseBreakpoint.line = breakpointLocation.getLine();
         responseBreakpoint.verified = true;
         String logMessage = sourceBreakpoint.logMessage;
@@ -1158,8 +1158,8 @@ public class SWFDebugSession extends DebugSession {
         if (pendingBreakpoints.isEmpty()) {
             return;
         }
-        //if we weren't able to add some breakpoints earlier because we
-        //we couldn't find the source file, try again!
+        // if we weren't able to add some breakpoints earlier because we
+        // we couldn't find the source file, try again!
         Iterator<String> iterator = pendingBreakpoints.keySet().iterator();
         while (iterator.hasNext()) {
             String path = iterator.next();
@@ -1170,15 +1170,15 @@ public class SWFDebugSession extends DebugSession {
             nextBreakpointID = idToRestore;
             boolean hasVerified = false;
             for (Breakpoint breakpoint : breakpoints) {
-                //this breakpoint was unverified, but it may be verified
-                //now, so let the editor know the updated status
+                // this breakpoint was unverified, but it may be verified
+                // now, so let the editor know the updated status
                 BreakpointEvent.BreakpointBody body = new BreakpointEvent.BreakpointBody();
                 body.breakpoint = breakpoint;
                 body.reason = BreakpointEvent.REASON_CHANGED;
                 if (breakpoint.verified) {
-                    //if any of the breakpoints are verified, that's good
-                    //enough. we shouldn't keep trying the other unverified
-                    //ones because they will probably always fail
+                    // if any of the breakpoints are verified, that's good
+                    // enough. we shouldn't keep trying the other unverified
+                    // ones because they will probably always fail
                     hasVerified = true;
                 }
                 sendEvent(new BreakpointEvent(body));
@@ -1443,16 +1443,16 @@ public class SWFDebugSession extends DebugSession {
             Location location = swfFrame.getLocation();
             SourceFile file = location.getFile();
             StackFrame stackFrame = new StackFrame();
-            //include ids for both the isolate and the frame
+            // include ids for both the isolate and the frame
             stackFrame.id = new IsolateAndFrame(threadId, i).toCombinedID();
             stackFrame.name = swfFrame.getCallSignature();
             if (file != null) {
                 Source source = sourceFileToSource(file);
                 stackFrame.source = source;
                 stackFrame.line = location.getLine();
-                //location doesn't include column
-                //use 1 as the default since that's required to show
-                //exception info (0 won't work)
+                // location doesn't include column
+                // use 1 as the default since that's required to show
+                // exception info (0 won't work)
                 stackFrame.column = 1;
             }
             stackFrames.add(stackFrame);
@@ -1525,7 +1525,7 @@ public class SWFDebugSession extends DebugSession {
             flash.tools.debugger.Variable[] members = getVariables(isolateAndFrameOrValue);
             mapMembersToVariables(isolateAndFrameOrValue, members, variables);
         } catch (PlayerDebugException e) {
-            //ignore
+            // ignore
         }
         sendResponse(response, new VariablesResponseBody(variables));
     }
@@ -1547,7 +1547,7 @@ public class SWFDebugSession extends DebugSession {
         }
         for (flash.tools.debugger.Variable member : members) {
             if (member.isAttributeSet(VariableAttribute.IS_STATIC)) {
-                //we're showing non-static members only
+                // we're showing non-static members only
                 continue;
             }
             Value memberValue = member.getValue();
@@ -1628,8 +1628,8 @@ public class SWFDebugSession extends DebugSession {
     }
 
     /**
-     * Values from isolates cannot be accessed from the main session, so we need
-     * to encode the frame and isolate/worker id with the value id.
+     * Values from isolates cannot be accessed from the main session, so we need to
+     * encode the frame and isolate/worker id with the value id.
      */
     private class IsolateAndFrameOrValue {
         private static final long VALUE_MULTIPLIER = 10000L;
@@ -1740,7 +1740,7 @@ public class SWFDebugSession extends DebugSession {
                 setValue = setValue && faultEvent == null;
 
                 if (setValue) {
-                    //need to get it again to access the new value
+                    // need to get it again to access the new value
                     member = getMemberByName(isolateAndFrameOrValue, arguments.name);
                     memberValue = member.getValue();
                     SetVariableResponseBody body = new SetVariableResponseBody();
@@ -1902,12 +1902,12 @@ public class SWFDebugSession extends DebugSession {
     private void stopWaitingForResume(int isolateId) {
         if (isolateId == Isolate.DEFAULT_ID) {
             waitingForResume = false;
-            //previousFaultEvent = null;
+            // previousFaultEvent = null;
         } else {
             for (IsolateWithState isolateWithState : isolates) {
                 if (isolateWithState.isolate.getId() == isolateId) {
                     isolateWithState.waitingForResume = false;
-                    //isolateWithState.previousFaultEvent = null;
+                    // isolateWithState.previousFaultEvent = null;
                     break;
                 }
             }
@@ -1927,8 +1927,8 @@ public class SWFDebugSession extends DebugSession {
         }
         Path transformedPath = flexHome.resolve(sourceFilePath.substring(index + 1));
         if (Files.exists(transformedPath)) {
-            //only transform the path if the transformed file exists
-            //if it doesn't exist, the original path may be valid
+            // only transform the path if the transformed file exists
+            // if it doesn't exist, the original path may be valid
             return transformedPath.toAbsolutePath().toString();
         }
         return sourceFilePath;
