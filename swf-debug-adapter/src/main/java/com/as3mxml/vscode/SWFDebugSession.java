@@ -361,7 +361,8 @@ public class SWFDebugSession extends DebugSession {
                 refreshPendingBreakpoints();
             } else if (event instanceof SwfUnloadedEvent) {
                 SwfUnloadedEvent unloadEvent = (SwfUnloadedEvent) event;
-                if (unloadEvent.path.equals(mainSwfPath) && unloadEvent.index == mainSwfIndex) {
+                if ((mainSwfPath == null && mainSwfPath == null)
+                        || (unloadEvent.path.equals(mainSwfPath) && unloadEvent.index == mainSwfIndex)) {
                     cancelRunner = true;
                     sendEvent(new TerminatedEvent());
                 }
