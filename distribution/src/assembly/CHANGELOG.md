@@ -1,5 +1,12 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.2.2
+
+### Fixed Issues
+
+- General: Fix `NotConnectedException` on macOS due to bug in wrong SWF ID returned by runtime.
+- General: Fix issue where the SWF unload was not handled correctly if it happened due to an exception before SWF load.
+
 ## v1.2.1
 
 ### Fixed Issues
