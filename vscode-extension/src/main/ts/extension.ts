@@ -20,30 +20,31 @@ import SWFDebugAdapterDescriptorFactory from "./utils/SWFDebugAdapterDescriptorF
 import * as vscode from "vscode";
 
 let savedContext: vscode.ExtensionContext = null;
-let debugConfigurationProvider: SWFDebugConfigurationProvider = null;
-let swfDebugAdapterDescriptorFactory: SWFDebugAdapterDescriptorFactory = null;
 
 export function activate(context: vscode.ExtensionContext) {
   savedContext = context;
 
-  debugConfigurationProvider = new SWFDebugConfigurationProvider(
-    debugPathsCallback
+  context.subscriptions.push(
+    vscode.debug.registerDebugConfigurationProvider(
+      "swf",
+      new SWFDebugConfigurationProvider(debugPathsCallback),
+      vscode.DebugConfigurationProviderTriggerKind.Initial
+    )
   );
-  let debugConfigDisposable = vscode.debug.registerDebugConfigurationProvider(
-    "swf",
-    debugConfigurationProvider
+  context.subscriptions.push(
+    vscode.debug.registerDebugConfigurationProvider(
+      "swf",
+      new SWFDebugConfigurationProvider(debugPathsCallback),
+      vscode.DebugConfigurationProviderTriggerKind.Dynamic
+    )
   );
-  context.subscriptions.push(debugConfigDisposable);
 
-  swfDebugAdapterDescriptorFactory = new SWFDebugAdapterDescriptorFactory(
-    savedContext,
-    debugPathsCallback
+  context.subscriptions.push(
+    vscode.debug.registerDebugAdapterDescriptorFactory(
+      "swf",
+      new SWFDebugAdapterDescriptorFactory(savedContext, debugPathsCallback)
+    )
   );
-  let debugAdapterDisposable = vscode.debug.registerDebugAdapterDescriptorFactory(
-    "swf",
-    swfDebugAdapterDescriptorFactory
-  );
-  context.subscriptions.push(debugAdapterDisposable);
 }
 
 export function deactivate() {
@@ -62,12 +63,12 @@ function debugPathsCallback() {
   let javaPathSetting = vscode.workspace
     .getConfiguration("as3mxml")
     .get("java.path") as string;
-  let javaPath = findJava(javaPathSetting, foundJavaPath => {
+  let javaPath = findJava(javaPathSetting, (foundJavaPath) => {
     return validateJava(savedContext.extensionPath, foundJavaPath);
   });
 
   return {
     javaPath,
-    sdkPath
+    sdkPath,
   };
 }
