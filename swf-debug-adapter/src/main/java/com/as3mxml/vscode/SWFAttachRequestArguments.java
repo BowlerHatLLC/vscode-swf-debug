@@ -23,4 +23,5 @@ public class SWFAttachRequestArguments extends AttachRequest.AttachRequestArgume
 	public String platform = null;
 	public String applicationID = null;
 	public String bundle = null;
+	public String platformsdk = null;
 }

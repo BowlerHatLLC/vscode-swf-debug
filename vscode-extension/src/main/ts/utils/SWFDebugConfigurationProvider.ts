@@ -56,7 +56,8 @@ export type SWFDebugConfigurationPathsCallback = () => {
 };
 
 export default class SWFDebugConfigurationProvider
-  implements vscode.DebugConfigurationProvider {
+  implements vscode.DebugConfigurationProvider
+{
   constructor(public pathsCallback: SWFDebugConfigurationPathsCallback) {}
 
   provideDebugConfigurations(
@@ -143,6 +144,7 @@ export default class SWFDebugConfigurationProvider
   ): SWFDebugConfiguration {
     let applicationID = debugConfiguration.applicationID;
     let bundle = debugConfiguration.bundle;
+    let platformsdk = debugConfiguration.platformsdk;
 
     let platform = debugConfiguration.platform;
     if (platform) {
@@ -193,6 +195,17 @@ export default class SWFDebugConfigurationProvider
           }
         }
       }
+      if (!platformsdk) {
+        if (asconfigJSON && "airOptions" in asconfigJSON) {
+          let airOptions = asconfigJSON.airOptions;
+          if (platform in airOptions) {
+            let platformOptions = airOptions[platform];
+            if ("platformsdk" in platformOptions) {
+              platformsdk = platformOptions.platformsdk;
+            }
+          }
+        }
+      }
 
       if (!applicationID) {
         vscode.window.showErrorMessage(
@@ -208,6 +221,7 @@ export default class SWFDebugConfigurationProvider
       }
       debugConfiguration.applicationID = applicationID;
       debugConfiguration.bundle = bundle;
+      debugConfiguration.platformsdk = platformsdk;
     }
     return debugConfiguration;
   }

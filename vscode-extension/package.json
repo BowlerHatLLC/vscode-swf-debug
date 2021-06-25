@@ -70,14 +70,19 @@
                 "type": "string",
                 "description": "Installs the Adobe AIR application on the specified platform and launches it before attaching to the debugger.",
                 "enum": [
+                  "android",
                   "ios",
-                  "android"
+                  "ios_simulator"
                 ]
               },
               "connect": {
                 "type": "boolean",
                 "description": "Indicates if the debugger should connect to the runtime instead of listening. May be used for USB debugging on mobile.",
                 "default": false
+              },
+              "platformsdk": {
+                "type": "string",
+                "description": "An optional path to the platform SDK for the target device."
               },
               "port": {
                 "type": "number",

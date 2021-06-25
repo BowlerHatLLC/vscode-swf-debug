@@ -144,6 +144,7 @@ public class SWFDebugSession extends DebugSession {
     private static final String SDK_PATH_SIGNATURE_UNIX = "/frameworks/projects/";
     private static final String SDK_PATH_SIGNATURE_WINDOWS = "\\frameworks\\projects\\";
     private static final String PLATFORM_IOS = "ios";
+    private static final String PLATFORM_IOS_SIMULATOR = "ios_simulator";
     private static final long LOCALS_VALUE_ID = 1;
     private ThreadSafeSession swfSession;
     private List<IsolateWithState> isolates = new ArrayList<>();
@@ -777,18 +778,23 @@ public class SWFDebugSession extends DebugSession {
         SWFAttachRequestArguments swfArgs = (SWFAttachRequestArguments) args;
         forwardedPortPlatform = null;
         forwardedPort = -1;
+        Path platformSdkPath = null;
+        if (swfArgs.platformsdk != null) {
+            platformSdkPath = Paths.get(swfArgs.platformsdk);
+        }
         if (swfArgs.platform != null) {
             Path workspacePath = Paths.get(System.getProperty(WORKSPACE_PROPERTY));
             if (swfArgs.bundle != null) {
                 sendOutputEvent("Preparing to install Adobe AIR application...\n");
             }
             if (swfArgs.applicationID != null && swfArgs.bundle != null // don't uninstall unless also installing
-                    && !uninstallApp(workspacePath, swfArgs.platform, swfArgs.applicationID)) {
+                    && !uninstallApp(workspacePath, swfArgs.platform, swfArgs.applicationID, platformSdkPath)) {
                 response.success = false;
                 sendResponse(response);
                 return;
             }
-            if (swfArgs.bundle != null && !installApp(workspacePath, swfArgs.platform, Paths.get(swfArgs.bundle))) {
+            if (swfArgs.bundle != null
+                    && !installApp(workspacePath, swfArgs.platform, Paths.get(swfArgs.bundle), platformSdkPath)) {
                 response.success = false;
                 sendResponse(response);
                 return;
@@ -798,7 +804,7 @@ public class SWFDebugSession extends DebugSession {
                 sendResponse(response);
                 return;
             }
-            if (!launchApp(workspacePath, adtPath, swfArgs.platform, swfArgs.applicationID)) {
+            if (!launchApp(workspacePath, adtPath, swfArgs.platform, swfArgs.applicationID, platformSdkPath)) {
                 response.success = false;
                 sendResponse(response);
                 return;
@@ -824,9 +830,9 @@ public class SWFDebugSession extends DebugSession {
         sendEvent(new OutputEvent(body));
     }
 
-    private boolean uninstallApp(Path workspacePath, String platform, String applicationID) {
+    private boolean uninstallApp(Path workspacePath, String platform, String applicationID, Path platformSdkPath) {
         DeviceCommandResult uninstallResult = DeviceInstallUtils.runUninstallCommand(platform, applicationID,
-                workspacePath, adtPath);
+                workspacePath, adtPath, platformSdkPath);
         if (uninstallResult.error) {
             sendErrorOutputEvent(uninstallResult.message + "\n");
             return false;
@@ -834,10 +840,10 @@ public class SWFDebugSession extends DebugSession {
         return true;
     }
 
-    private boolean installApp(Path workspacePath, String platform, Path bundlePath) {
+    private boolean installApp(Path workspacePath, String platform, Path bundlePath, Path platformSdkPath) {
         sendOutputEvent("Installing Adobe AIR application...\n");
         DeviceCommandResult installResult = DeviceInstallUtils.runInstallCommand(platform, bundlePath, workspacePath,
-                adtPath);
+                adtPath, platformSdkPath);
         if (installResult.error) {
             sendErrorOutputEvent(installResult.message + "\n");
             return false;
@@ -858,7 +864,8 @@ public class SWFDebugSession extends DebugSession {
         return true;
     }
 
-    private boolean launchApp(Path workspacePath, Path adtPath, String platform, String applicationID) {
+    private boolean launchApp(Path workspacePath, Path adtPath, String platform, String applicationID,
+            Path platformSdkPath) {
         if (platform.equals(PLATFORM_IOS)) {
             // ADT can't launch an iOS application automatically
             sendOutputEvent(
@@ -871,9 +878,13 @@ public class SWFDebugSession extends DebugSession {
                     "\033[0;95mDebugger ready to attach. You must launch your application manually on the Android device.\u001B[0m\n");
             return true;
         }
-        sendOutputEvent("Launching Adobe AIR application on device...\n");
+        if (PLATFORM_IOS_SIMULATOR.equals(platform)) {
+            sendOutputEvent("Launching Adobe AIR application on iOS Simulator...\n");
+        } else {
+            sendOutputEvent("Launching Adobe AIR application on device...\n");
+        }
         DeviceCommandResult launchResult = DeviceInstallUtils.runLaunchCommand(platform, applicationID, workspacePath,
-                adtPath);
+                adtPath, platformSdkPath);
         if (launchResult.error) {
             sendErrorOutputEvent(launchResult.message + "\n");
             return false;
