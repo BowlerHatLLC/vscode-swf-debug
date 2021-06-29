@@ -1005,6 +1005,10 @@ public class SWFDebugSession extends DebugSession {
         try {
             SwfInfo[] swfs = swfSession.getSwfs();
             for (SwfInfo swf : swfs) {
+                if (swf == null) {
+                    // for some reason, the array may contain null values (vscode-swf-debug#25)
+                    continue;
+                }
                 SourceFile[] sourceFiles = swf.getSourceList(swfSession);
                 for (SourceFile sourceFile : sourceFiles) {
                     Path sourceFilePath = null;
