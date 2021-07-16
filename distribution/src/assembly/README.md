@@ -269,7 +269,7 @@ On macOS, use _adl_ as the excutable name. On Windows, use _adl.exe_.
 
 ## Additional Examples
 
-For Adobe AIR mobile projects, a number of additional attributes are available to customize which type of device to simulate. For example, the following launch configuration simulates an iPhone with "Retina" display:
+For [Adobe AIR mobile projects](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/Debug-an-Adobe-AIR-mobile-application-with-Visual-Studio-Code), a number of additional attributes are available to customize which type of device to simulate. For example, the following launch configuration simulates an iPhone with "Retina" display:
 
 ```json
 {
@@ -387,7 +387,7 @@ If the value of the `request` attribute is set to `attach`, the following attrib
 
 - `platform`
 
-  The debugger will connect to a mobile device running the specified platform. May be combined with `applicationID` and `bundle`.
+  The debugger will connect to a mobile device running the specified platform. Supported values include `"android"`, `"ios"`, and `"ios_simulator"`. This field may be combined with `applicationID` and `bundle`.
 
 ## Support this project
 
@@ -398,4 +398,3 @@ The [SWF debugger extension for Visual Studio Code](https://marketplace.visualst
 Special thanks to the following sponsors for their generous support:
 
 - [Moonshine IDE](http://moonshine-ide.com/)
-- [Dedoose](https://www.dedoose.com/)
