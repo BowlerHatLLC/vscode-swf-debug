@@ -23,7 +23,8 @@ export type SWFDebugAdapterPathsCallback = () => {
 };
 
 export default class SWFDebugAdapterDescriptorFactory
-  implements vscode.DebugAdapterDescriptorFactory {
+  implements vscode.DebugAdapterDescriptorFactory
+{
   constructor(
     public extensionContext: vscode.ExtensionContext,
     public pathsCallback: SWFDebugAdapterPathsCallback
@@ -41,15 +42,16 @@ export default class SWFDebugAdapterDescriptorFactory
       throw new Error("SWF debugger launch failed. Java path not found.");
     }
     let args = [
-      "-Dworkspace=" + session.workspaceFolder.uri.fsPath,
-
       //uncomment to debug the SWF debugger JAR
       //"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005",
 
       "-cp",
       this.getClassPath(),
-      "com.as3mxml.vscode.SWFDebug"
+      "com.as3mxml.vscode.SWFDebug",
     ];
+    if (session.workspaceFolder) {
+      args.unshift("-Dworkspace=" + session.workspaceFolder.uri.fsPath);
+    }
     if (paths.sdkPath) {
       //don't pass in an SDK unless we have one set
       args.unshift("-Dflexlib=" + path.resolve(paths.sdkPath, "frameworks"));
