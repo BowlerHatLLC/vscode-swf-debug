@@ -93,9 +93,8 @@ export default class SWFDebugConfigurationProvider
 
     let asconfigJSON: any = null;
     if (workspaceFolder !== undefined) {
-      let workspaceFolderPath = workspaceFolder.uri.fsPath;
       let asconfigPath = path.resolve(
-        workspaceFolderPath,
+        workspaceFolder.uri.fsPath,
         FILE_NAME_ASCONFIG_JSON
       );
       if (fs.existsSync(asconfigPath)) {
@@ -162,10 +161,12 @@ export default class SWFDebugConfigurationProvider
           }
         }
         if (appDescriptorPath) {
-          appDescriptorPath = path.resolve(
-            workspaceFolder.uri.fsPath,
-            appDescriptorPath
-          );
+          if (workspaceFolder && !path.isAbsolute(appDescriptorPath)) {
+            appDescriptorPath = path.resolve(
+              workspaceFolder.uri.fsPath,
+              appDescriptorPath
+            );
+          }
           try {
             let appDescriptorContent = fs.readFileSync(
               appDescriptorPath,
@@ -347,10 +348,10 @@ export default class SWFDebugConfigurationProvider
           sourcePathEntry,
           mainClassPrefix + FILE_EXTENSION_AS
         );
-        let absoluteFilePath = path.resolve(
-          workspaceFolder.uri.fsPath,
-          filePath
-        );
+        let absoluteFilePath = filePath;
+        if (workspaceFolder && !path.isAbsolute(absoluteFilePath)) {
+          absoluteFilePath = path.resolve(workspaceFolder.uri.fsPath, filePath);
+        }
         if (fs.existsSync(absoluteFilePath)) {
           mainClassPath = filePath;
         } else {
@@ -358,10 +359,13 @@ export default class SWFDebugConfigurationProvider
             sourcePathEntry,
             mainClassPrefix + FILE_EXTENSION_MXML
           );
-          let absoluteFilePath = path.resolve(
-            workspaceFolder.uri.fsPath,
-            filePath
-          );
+          let absoluteFilePath = filePath;
+          if (workspaceFolder && !path.isAbsolute(absoluteFilePath)) {
+            absoluteFilePath = path.resolve(
+              workspaceFolder.uri.fsPath,
+              filePath
+            );
+          }
           if (fs.existsSync(absoluteFilePath)) {
             mainClassPath = filePath;
           }
@@ -435,7 +439,7 @@ export default class SWFDebugConfigurationProvider
 
     if (requireAIR && !debugConfiguration.extdir) {
       let programDir = path.dirname(program);
-      if (!path.isAbsolute(programDir)) {
+      if (workspaceFolder && !path.isAbsolute(programDir)) {
         programDir = path.resolve(workspaceFolder.uri.fsPath, programDir);
       }
       let unpackagedDir = path.resolve(programDir, FILE_NAME_UNPACKAGED_ANES);
@@ -446,7 +450,7 @@ export default class SWFDebugConfigurationProvider
         fs.statSync(unpackagedDir).isDirectory()
       ) {
         let reduceCallback = (result: string[], newItem: string) => {
-          if (!path.isAbsolute(newItem)) {
+          if (workspaceFolder && !path.isAbsolute(newItem)) {
             newItem = path.resolve(workspaceFolder.uri.fsPath, newItem);
           }
           if (newItem.endsWith(FILE_EXTENSION_ANE)) {
