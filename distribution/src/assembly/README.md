@@ -47,7 +47,7 @@ Depending on which language/framework builds the _.swf_ file, the steps to confi
 
 ### ActionScript and MXML
 
-This extension offers tight integration with the [ActionScript & MXML langauge extension](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-nextgenas). Many attributes in the workspace's _launch.json_ file can be omitted because they will be populated automatically based on the project's [_asconfig.json_](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/asconfig.json) file.
+This extension offers tight integration with the [ActionScript & MXML langauge extension](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-as3mxml). Many attributes in the workspace's _launch.json_ file can be omitted because they will be populated automatically based on the project's [_asconfig.json_](https://github.com/BowlerHatLLC/vscode-as3mxml/wiki/asconfig.json) file.
 
 ActionScript & MXML projects built using any of the following SDKs or tools may be debugged using the SWF debug extension:
 
