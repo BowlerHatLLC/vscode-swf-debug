@@ -48,6 +48,7 @@ interface SWFDebugConfiguration extends vscode.DebugConfiguration {
   platform?: string;
   bundle?: string;
   applicationID?: string;
+  asconfigPath?: string;
 }
 
 export type SWFDebugConfigurationPathsCallback = () => {
@@ -93,10 +94,12 @@ export default class SWFDebugConfigurationProvider
 
     let asconfigJSON: any = null;
     if (workspaceFolder !== undefined) {
-      let asconfigPath = path.resolve(
-        workspaceFolder.uri.fsPath,
-        FILE_NAME_ASCONFIG_JSON
-      );
+      var asconfigPath = debugConfiguration.asconfigPath
+        ? debugConfiguration.asconfigPath
+        : FILE_NAME_ASCONFIG_JSON;
+      if (!path.isAbsolute(asconfigPath)) {
+        asconfigPath = path.resolve(workspaceFolder.uri.fsPath, asconfigPath);
+      }
       if (fs.existsSync(asconfigPath)) {
         try {
           let asconfigFile = fs.readFileSync(asconfigPath, "utf8");

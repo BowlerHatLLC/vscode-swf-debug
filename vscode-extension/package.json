@@ -182,6 +182,14 @@
                 ],
                 "description": "(Advanced) Specifies the root directory of the application to run. If not specified, the directory containing the application descriptor file is used.",
                 "default": null
+              },
+              "asconfigPath": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "(Advanced) A custom path to the asconfig.json file used for automatically populating the other fields.",
+                "default": null
               }
             }
           }
