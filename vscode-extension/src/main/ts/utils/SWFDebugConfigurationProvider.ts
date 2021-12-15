@@ -128,6 +128,7 @@ export default class SWFDebugConfigurationProvider
       return this.resolveAttachDebugConfiguration(
         workspaceFolder,
         asconfigJSON,
+        asconfigPath,
         debugConfiguration
       );
     }
@@ -142,6 +143,7 @@ export default class SWFDebugConfigurationProvider
   private resolveAttachDebugConfiguration(
     workspaceFolder: vscode.WorkspaceFolder,
     asconfigJSON: any,
+    asconfigPath: string,
     debugConfiguration: SWFDebugConfiguration
   ): SWFDebugConfiguration {
     let applicationID = debugConfiguration.applicationID;
@@ -218,9 +220,12 @@ export default class SWFDebugConfigurationProvider
         return undefined;
       }
       if (!bundle) {
-        vscode.window.showErrorMessage(
-          `Error reading Adobe AIR output path for platform "${platform}".`
-        );
+        let bundleMessage = `Error reading Adobe AIR output path for platform "${platform}"`;
+        if (asconfigPath) {
+          bundleMessage += ` from ${path.basename(asconfigPath)}`;
+        }
+        bundleMessage += ".";
+        vscode.window.showErrorMessage(bundleMessage);
         return undefined;
       }
       debugConfiguration.applicationID = applicationID;
