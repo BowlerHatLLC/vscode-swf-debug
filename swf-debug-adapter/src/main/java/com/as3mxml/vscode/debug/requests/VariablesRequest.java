@@ -28,5 +28,7 @@ public class VariablesRequest extends Request {
     public class VariablesArguments extends Request.RequestArguments {
         public long variablesReference;
         public String filter;
+        public Integer start;
+        public Integer count;
     }
 }

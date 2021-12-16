@@ -1539,7 +1539,8 @@ public class SWFDebugSession extends DebugSession {
         try {
             IsolateAndFrameOrValue isolateAndFrameOrValue = new IsolateAndFrameOrValue(arguments.variablesReference);
             flash.tools.debugger.Variable[] members = getVariables(isolateAndFrameOrValue);
-            mapMembersToVariables(isolateAndFrameOrValue, members, variables);
+            mapMembersToVariables(isolateAndFrameOrValue, members, arguments.filter, arguments.start, arguments.count,
+                    variables);
         } catch (PlayerDebugException e) {
             // ignore
         }
@@ -1547,7 +1548,8 @@ public class SWFDebugSession extends DebugSession {
     }
 
     private void mapMembersToVariables(IsolateAndFrameOrValue isolateAndFrameOrValue,
-            flash.tools.debugger.Variable[] members, List<Variable> result) throws PlayerDebugException {
+            flash.tools.debugger.Variable[] members, String filter, Integer start, Integer count, List<Variable> result)
+            throws PlayerDebugException {
         boolean isThis = false;
         IsolateSession isolateSession = getIsolateSession(isolateAndFrameOrValue.isolateId);
         if (isolateSession != null) {
@@ -1561,26 +1563,69 @@ public class SWFDebugSession extends DebugSession {
                 isThis = swfThisValue.getId() == isolateAndFrameOrValue.valueId;
             }
         }
+        List<Integer> indexes = null;
+        boolean requireIndexed = VariablesRequest.FILTER_INDEXED.equals(filter);
+        if (requireIndexed) {
+            indexes = new ArrayList<>();
+        }
         for (flash.tools.debugger.Variable member : members) {
             if (member.isAttributeSet(VariableAttribute.IS_STATIC)) {
                 // we're showing non-static members only
                 continue;
             }
+            int index = -1;
+            String memberName = member.getName();
+            if (filter != null) {
+                try {
+                    index = Integer.parseInt(memberName);
+                    if (!requireIndexed) {
+                        continue;
+                    }
+                    int startIndex = start != null ? start : 0;
+                    if (index < startIndex) {
+                        continue;
+                    }
+                    if (count != null && count != 0 && index >= (startIndex + count)) {
+                        continue;
+                    }
+                } catch (NumberFormatException e) {
+                    if (requireIndexed) {
+                        continue;
+                    }
+                }
+            }
             Value memberValue = member.getValue();
             Variable variable = new Variable();
-            variable.name = member.getName();
+            variable.name = memberName;
             variable.type = memberValue.getTypeName();
             if (isolateAndFrameOrValue.valueId == LOCALS_VALUE_ID) {
-                variable.evaluateName = member.getName();
+                variable.evaluateName = memberName;
             } else if (isThis) {
-                variable.evaluateName = "this." + member.getName();
+                if (index != -1) {
+                    variable.evaluateName = "this[" + memberName + "]";
+                } else {
+                    variable.evaluateName = "this." + memberName;
+                }
             }
             long id = memberValue.getId();
             if (id != Value.UNKNOWN_ID) {
                 IsolateAndFrameOrValue memberIsolateAndFrameOrValue = new IsolateAndFrameOrValue(
-                        isolateAndFrameOrValue.isolateId, isolateAndFrameOrValue.frameId, memberValue.getId());
+                        isolateAndFrameOrValue.isolateId, isolateAndFrameOrValue.frameId, id);
                 variable.value = memberValue.getTypeName();
                 variable.variablesReference = memberIsolateAndFrameOrValue.toVariablesReference();
+                flash.tools.debugger.Variable[] subMembers = memberValue.getMembers(swfSession);
+                int namedVariables = 0;
+                int indexedVariables = 0;
+                for (flash.tools.debugger.Variable subMember : subMembers) {
+                    try {
+                        Integer.parseInt(subMember.getName());
+                        indexedVariables++;
+                    } catch (NumberFormatException e) {
+                        namedVariables++;
+                    }
+                }
+                variable.indexedVariables = indexedVariables;
+                variable.namedVariables = namedVariables;
             } else {
                 if (memberValue.getType() == VariableType.STRING) {
                     variable.value = "\"" + memberValue.getValueAsString() + "\"";
@@ -1612,7 +1657,24 @@ public class SWFDebugSession extends DebugSession {
                 presentationHint.attributes = attributes.toArray(new String[attributes.size()]);
             }
             variable.presentationHint = presentationHint;
-            result.add(variable);
+            if (requireIndexed) {
+                boolean inserted = false;
+                for (int i = 0; i < indexes.size(); i++) {
+                    int otherIndex = indexes.get(i);
+                    if (index < otherIndex) {
+                        indexes.add(i, index);
+                        result.add(i, variable);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted) {
+                    indexes.add(index);
+                    result.add(variable);
+                }
+            } else {
+                result.add(variable);
+            }
         }
     }
 
