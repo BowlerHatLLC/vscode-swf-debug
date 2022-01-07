@@ -1,5 +1,12 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.5.0
+
+### New Features
+
+- Variables: Array members are now displayed as indexed, in the correct order.
+- Launch: Added new `asconfigPath` field to the _launch.json_ configuration options to allow the use of a custom file path instead of the default _asconfig.json_ .
+
 ## v1.4.0
 
 ### Fixed Issues
