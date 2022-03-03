@@ -7,6 +7,10 @@
 - Variables: Array members are now displayed as indexed, in the correct order.
 - Launch: Added new `asconfigPath` field to the _launch.json_ configuration options to allow the use of a custom file path instead of the default _asconfig.json_ .
 
+### Fixed Issues
+
+- Workers: Fix exception when attempting to resume a newly created worker because sometimes they are not started in a suspended state.
+
 ## v1.4.0
 
 ### Fixed Issues
