@@ -334,12 +334,6 @@ public class SWFDebugSession extends DebugSession {
                 Isolate isolate = isolateEvent.isolate;
                 IsolateWithState isolateWithState = new IsolateWithState(isolate);
                 isolates.add(isolateWithState);
-                IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
-                if (isolateSession.isSuspended()) {
-                    // for some reason, workers sometimes start out suspended,
-                    // and sometimes they don't?
-                    isolateSession.resume();
-                }
 
                 ThreadEvent.ThreadBody body = new ThreadEvent.ThreadBody();
                 body.reason = ThreadEvent.REASON_STARTED;
@@ -444,6 +438,10 @@ public class SWFDebugSession extends DebugSession {
 
             StoppedEvent.StoppedBody body = null;
             switch (isolateSession.suspendReason()) {
+                case SuspendReason.ScriptLoaded: {
+                    isolateSession.resume();
+                    break;
+                }
                 case SuspendReason.Breakpoint: {
                     body = new StoppedEvent.StoppedBody();
                     body.reason = StoppedEvent.REASON_BREAKPOINT;
