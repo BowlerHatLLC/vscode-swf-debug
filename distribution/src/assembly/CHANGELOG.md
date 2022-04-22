@@ -1,5 +1,11 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.6.0
+
+### Fixed Issues
+
+- Workers: Fixed intermittent issue where worker would remain in a paused state indefinitely after being started.
+
 ## v1.5.0
 
 ### New Features
