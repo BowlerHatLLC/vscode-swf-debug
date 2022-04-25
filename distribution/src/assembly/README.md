@@ -108,12 +108,12 @@ Most importantly, the `program` attribute must be set to either the path of an A
 Find the correct paths inside the [_project.xml_ file](https://lime.software/docs/project-files/xml-format/) that configures OpenFL. In particular, this information is available on the `<app>` element:
 
 ```xml
-<app main="com.example.MyProject" file="MyProject" path="build"/>
+<app main="com.example.MyProject" file="MyProject" path="bin"/>
 ```
 
 The `path` attribute is the main output folder where binaries are created. The `file` attribute is used to name the compiled _.swf_ file.
 
-Building the project above for Adobe Flash Player creates _build/flash/bin/MyProject.swf_. Specify this path using the `program` attribute, as shown below:
+Building the project above for Adobe Flash Player creates _bin/flash/bin/MyProject.swf_. Specify this path using the `program` attribute, as shown below:
 
 ```json
 {
@@ -123,13 +123,13 @@ Building the project above for Adobe Flash Player creates _build/flash/bin/MyPro
       "type": "swf",
       "request": "launch",
       "name": "Launch SWF",
-      "program": "${workspaceFolder}/build/flash/bin/MyProject.swf"
+      "program": "${workspaceFolder}/bin/flash/bin/MyProject.swf"
     }
   ]
 }
 ```
 
-When building the same project for Adobe AIR, the _.swf_ file is created at _build/air/bin/MyProject.swf_ instead. OpenFL also creates the Adobe AIR application descriptor at _build/air/application.xml_.
+When building the same project for Adobe AIR, the _.swf_ file is created at _bin/air/bin/MyProject.swf_ instead. OpenFL also creates the Adobe AIR application descriptor at _bin/air/application.xml_.
 
 Notice that _application.xml_ and _MyProject.swf_ are not located in the same folder. However, inside _application.xml_, it references _MyProject.swf_ file instead of _bin/MyProject.swf_:
 
@@ -154,8 +154,8 @@ The following example _launch.json_ file combines all of these values to configu
       "request": "launch",
       "name": "Launch SWF",
       "profile": "desktop",
-      "program": "${workspaceRoot}/build/air/application.xml",
-      "rootDirectory": "${workspaceRoot}/build/air/bin",
+      "program": "${workspaceRoot}/bin/air/application.xml",
+      "rootDirectory": "${workspaceRoot}/bin/air/bin",
       "runtimeExecutable": "/absolute/path/to/AIR_SDK/bin/adl"
     }
   ]
@@ -184,7 +184,7 @@ When targeting Adobe Flash Player, run the `lime: build flash -debug` task:
       "type": "swf",
       "request": "launch",
       "name": "Launch SWF",
-      "program": "${workspaceFolder}/build/flash/bin/MyProject.swf",
+      "program": "${workspaceFolder}/bin/flash/bin/MyProject.swf",
       "preLaunchTask": "lime: build flash -debug"
     }
   ]
@@ -202,8 +202,8 @@ When targeting Adobe AIR, run the `lime: build air -debug` task:
       "request": "launch",
       "name": "Launch SWF",
       "profile": "desktop",
-      "program": "${workspaceRoot}/build/air/application.xml",
-      "rootDirectory": "${workspaceRoot}/build/air/bin",
+      "program": "${workspaceRoot}/bin/air/application.xml",
+      "rootDirectory": "${workspaceRoot}/bin/air/bin",
       "runtimeExecutable": "/absolute/path/to/AIR_SDK/bin/adl",
       "preLaunchTask": "lime: build air -debug"
     }
