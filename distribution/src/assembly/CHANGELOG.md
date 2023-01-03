@@ -1,5 +1,11 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.6.1
+
+### Other Changes
+
+- Documentation improvements
+
 ## v1.6.0
 
 ### Fixed Issues
