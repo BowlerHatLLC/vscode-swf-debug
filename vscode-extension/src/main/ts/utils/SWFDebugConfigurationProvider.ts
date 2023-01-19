@@ -529,7 +529,8 @@ function generateApplicationDescriptorProgram(
 }
 
 function findApplicationID(appDescriptorContent: string): string {
-  let result = appDescriptorContent.match(/<id>([\w+\.]+)<\/id>/);
+  // https://help.adobe.com/en_US/air/build/WSfffb011ac560372f2fea1812938a6e463-8000.html#WSfffb011ac560372f2fea1812938a6e463-7ffe
+  let result = appDescriptorContent.match(/<id>([A-Za-z0-9\-\.]+)<\/id>/);
   if (result) {
     return result[1];
   }
