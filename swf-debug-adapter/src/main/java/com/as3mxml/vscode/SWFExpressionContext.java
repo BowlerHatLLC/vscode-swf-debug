@@ -49,7 +49,6 @@ public class SWFExpressionContext implements Context {
 		if (!(o instanceof String)) {
 			throw new NoSuchVariableException(o);
 		}
-		Variable contextVar = null;
 		String memberName = (String) o;
 		try {
 			if (frameOrVariable instanceof Frame) {
@@ -69,7 +68,17 @@ public class SWFExpressionContext implements Context {
 						return localVar;
 					}
 				}
-				contextVar = contextFrame.getThis(swfSession);
+				Variable[] scopes = contextFrame.getScopeChain(swfSession);
+				for (Variable scope : scopes) {
+					Variable[] members = scope.getValue().getMembers(swfSession);
+					if (members != null) {
+						for (Variable member : members) {
+							if (member.getName().equals(memberName)) {
+								return member;
+							}
+						}
+					}
+				}
 			}
 		} catch (NoResponseException e) {
 			throw new NoSuchVariableException(o);
@@ -78,19 +87,19 @@ public class SWFExpressionContext implements Context {
 		} catch (NotConnectedException e) {
 			throw new NoSuchVariableException(o);
 		}
-		if (contextVar == null) {
-			contextVar = (Variable) frameOrVariable;
-		}
-		Variable[] members = null;
-		try {
-			members = contextVar.getValue().getMembers(swfSession);
-		} catch (Exception e) {
-			throw new NoSuchVariableException(o);
-		}
-		if (members != null) {
-			for (Variable member : members) {
-				if (member.getName().equals(memberName)) {
-					return member;
+		if (frameOrVariable instanceof Variable) {
+			Variable contextVar = (Variable) frameOrVariable;
+			Variable[] members = null;
+			try {
+				members = contextVar.getValue().getMembers(swfSession);
+			} catch (Exception e) {
+				throw new NoSuchVariableException(o);
+			}
+			if (members != null) {
+				for (Variable member : members) {
+					if (member.getName().equals(memberName)) {
+						return member;
+					}
 				}
 			}
 		}
@@ -123,7 +132,6 @@ public class SWFExpressionContext implements Context {
 	}
 
 	public void assign(Object o, Value v) throws NoSuchVariableException, PlayerFaultException {
-
 		Variable variable = null;
 		if (o instanceof Variable) {
 			variable = (Variable) o;
