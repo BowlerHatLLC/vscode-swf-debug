@@ -68,9 +68,17 @@ public class SWFExpressionContext implements Context {
 						return localVar;
 					}
 				}
+				Variable thisVar = contextFrame.getThis(swfSession);
+				if (thisVar != null) {
+					Object member = lookupMember(thisVar, memberName);
+					if (member != null) {
+						return member;
+					}
+				}
 				Variable[] scopes = contextFrame.getScopeChain(swfSession);
 				for (Variable scope : scopes) {
-					Variable[] members = scope.getValue().getMembers(swfSession);
+					Value scopeValue = scope.getValue();
+					Variable[] members = scopeValue.getMembers(swfSession);
 					if (members != null) {
 						for (Variable member : members) {
 							if (member.getName().equals(memberName)) {
@@ -79,6 +87,7 @@ public class SWFExpressionContext implements Context {
 						}
 					}
 				}
+
 			}
 		} catch (NoResponseException e) {
 			throw new NoSuchVariableException(o);
@@ -89,21 +98,32 @@ public class SWFExpressionContext implements Context {
 		}
 		if (frameOrVariable instanceof Variable) {
 			Variable contextVar = (Variable) frameOrVariable;
-			Variable[] members = null;
-			try {
-				members = contextVar.getValue().getMembers(swfSession);
-			} catch (Exception e) {
-				throw new NoSuchVariableException(o);
-			}
-			if (members != null) {
-				for (Variable member : members) {
-					if (member.getName().equals(memberName)) {
-						return member;
-					}
-				}
+			Object member = lookupMember(contextVar, memberName);
+			if (member != null) {
+				return member;
 			}
 		}
 		throw new NoSuchVariableException(o);
+	}
+
+	private Object lookupMember(Variable context, String memberName) {
+		if (context == null) {
+			return null;
+		}
+		Variable[] members = null;
+		try {
+			members = context.getValue().getMembers(swfSession);
+		} catch (Exception e) {
+			return null;
+		}
+		if (members != null) {
+			for (Variable member : members) {
+				if (member.getName().equals(memberName)) {
+					return member;
+				}
+			}
+		}
+		return null;
 	}
 
 	public Object lookupMembers(Object o) throws NoSuchVariableException {
