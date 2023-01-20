@@ -121,6 +121,7 @@ import flash.tools.debugger.events.SwfLoadedEvent;
 import flash.tools.debugger.events.SwfUnloadedEvent;
 import flash.tools.debugger.events.TraceEvent;
 import flash.tools.debugger.expression.ASTBuilder;
+import flash.tools.debugger.expression.ECMA;
 import flash.tools.debugger.expression.NoSuchVariableException;
 import flash.tools.debugger.expression.PlayerFaultException;
 import flash.tools.debugger.expression.ValueExp;
@@ -160,7 +161,7 @@ public class SWFDebugSession extends DebugSession {
     private Path adbPath;
     private Path idbPath;
     private Map<String, PendingBreakpoints> pendingBreakpoints;
-    private Map<String, LogLocation> savedLogLocations;
+    private Map<String, BreakpointExtras> savedBreakpointExtras;
     private int nextBreakpointID = 1;
     private String forwardedPortPlatform = null;
     private int forwardedPort = -1;
@@ -188,14 +189,16 @@ public class SWFDebugSession extends DebugSession {
         int idStart;
     }
 
-    private class LogLocation {
-        public LogLocation(Location location, String logMessage) {
+    private class BreakpointExtras {
+        public BreakpointExtras(Location location, String logMessage, String condition) {
             this.location = location;
             this.logMessage = logMessage;
+            this.condition = condition;
         }
 
         public Location location;
         public String logMessage;
+        public String condition;
     }
 
     private class RunProcessRunner implements Runnable {
@@ -234,11 +237,11 @@ public class SWFDebugSession extends DebugSession {
                     break;
                 }
                 try {
-                    boolean logPoint = false;
+                    boolean logPointOrFalseCondition = false;
                     while (swfSession.getEventCount() > 0) {
                         DebugEvent event = swfSession.nextEvent();
                         if (handleEvent(event)) {
-                            logPoint = true;
+                            logPointOrFalseCondition = true;
                         }
                         if (cancelRunner) {
                             // this might get set when handling the event
@@ -250,7 +253,7 @@ public class SWFDebugSession extends DebugSession {
                         break;
                     }
                     while (swfSession.isSuspended() && !waitingForResume) {
-                        handleSuspended(logPoint);
+                        handleSuspended(logPointOrFalseCondition);
                     }
                     for (IsolateWithState isolateWithState : isolates) {
                         Isolate isolate = isolateWithState.isolate;
@@ -318,13 +321,45 @@ public class SWFDebugSession extends DebugSession {
 
             } else if (event instanceof BreakEvent) {
                 BreakEvent breakEvent = (BreakEvent) event;
-                for (LogLocation logLocation : savedLogLocations.values()) {
-                    Location location = logLocation.location;
+                for (BreakpointExtras extras : savedBreakpointExtras.values()) {
+                    Location location = extras.location;
+                    boolean logPointOrFalseCondition = false;
                     if (breakEvent.fileId == location.getFile().getId() && breakEvent.line == location.getLine()) {
-                        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-                        populateLocationInOutputBody(breakEvent.isolateId, body);
-                        body.output = logLocation.logMessage;
-                        sendEvent(new OutputEvent(body));
+                        boolean conditionIsTrue = true;
+                        if (extras.condition != null) {
+                            conditionIsTrue = false;
+                            Frame[] swfFrames = swfSession.getFrames();
+                            if (swfFrames.length > 0) {
+                                Frame swfFrame = swfFrames[0];
+                                try {
+                                    ASTBuilder builder = new ASTBuilder(false);
+                                    ValueExp result = builder.parse(new StringReader(extras.condition));
+                                    Object evaluateResult = result
+                                            .evaluate(new SWFExpressionContext(swfSession, location.getIsolateId(),
+                                                    swfFrame));
+                                    if (evaluateResult instanceof flash.tools.debugger.Variable) {
+                                        flash.tools.debugger.Variable evaluateVar = (flash.tools.debugger.Variable) evaluateResult;
+                                        conditionIsTrue = ECMA.toBoolean(evaluateVar.getValue());
+                                    } else if (evaluateResult instanceof Value) {
+                                        Value evaluateValue = (Value) evaluateResult;
+                                        conditionIsTrue = ECMA.toBoolean(evaluateValue);
+                                    } else {
+                                        conditionIsTrue = Boolean.TRUE.equals(evaluateResult);
+                                    }
+                                    logPointOrFalseCondition = !conditionIsTrue;
+                                } catch (Exception e) {
+                                }
+                            }
+                        }
+                        if (conditionIsTrue && extras.logMessage != null) {
+                            OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+                            populateLocationInOutputBody(breakEvent.isolateId, body);
+                            body.output = extras.logMessage;
+                            sendEvent(new OutputEvent(body));
+                            logPointOrFalseCondition = true;
+                        }
+                    }
+                    if (logPointOrFalseCondition) {
                         return true;
                     }
                 }
@@ -506,7 +541,7 @@ public class SWFDebugSession extends DebugSession {
     public SWFDebugSession() {
         super(false);
         pendingBreakpoints = new HashMap<>();
-        savedLogLocations = new HashMap<>();
+        savedBreakpointExtras = new HashMap<>();
         String flexlibPath = System.getProperty(FLEXLIB_PROPERTY);
         if (flexlibPath != null) {
             flexlib = Paths.get(flexlibPath);
@@ -546,6 +581,7 @@ public class SWFDebugSession extends DebugSession {
 
         Capabilities capabilities = new Capabilities();
         capabilities.supportsExceptionInfoRequest = true;
+        capabilities.supportsConditionalBreakpoints = true;
         capabilities.supportsLogPoints = true;
         capabilities.supportsSetVariable = true;
         capabilities.supportsConfigurationDoneRequest = true;
@@ -1099,7 +1135,7 @@ public class SWFDebugSession extends DebugSession {
                     swfSession.clearBreakpoint(location);
                 }
             }
-            savedLogLocations.remove(path);
+            savedBreakpointExtras.remove(path);
         } catch (NoResponseException e) {
             StringWriter writer = new StringWriter();
             e.printStackTrace(new PrintWriter(writer));
@@ -1167,8 +1203,9 @@ public class SWFDebugSession extends DebugSession {
         responseBreakpoint.line = breakpointLocation.getLine();
         responseBreakpoint.verified = true;
         String logMessage = sourceBreakpoint.logMessage;
-        if (logMessage != null) {
-            savedLogLocations.put(path, new LogLocation(breakpointLocation, logMessage));
+        String condition = sourceBreakpoint.condition;
+        if (logMessage != null || condition != null) {
+            savedBreakpointExtras.put(path, new BreakpointExtras(breakpointLocation, logMessage, condition));
         }
     }
 
