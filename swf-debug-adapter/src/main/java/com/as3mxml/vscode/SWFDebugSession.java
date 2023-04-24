@@ -1846,7 +1846,7 @@ public class SWFDebugSession extends DebugSession {
                 String rawValue = arguments.value;
                 if (Boolean.TRUE.toString().equals(rawValue) || Boolean.FALSE.toString().equals(rawValue)) {
                     faultEvent = member.setValue(swfSession, VariableType.BOOLEAN, rawValue);
-                } else if (Pattern.compile("[0-9]*(\\.[0-9+])?").matcher(rawValue).matches()) {
+                } else if (Pattern.compile("[0-9]*(\\.[0-9]+)?").matcher(rawValue).matches()) {
                     faultEvent = member.setValue(swfSession, VariableType.NUMBER, rawValue);
                 } else if (rawValue.startsWith("\"") && rawValue.endsWith("\"")) {
                     rawValue = rawValue.substring(1, rawValue.length() - 1);
