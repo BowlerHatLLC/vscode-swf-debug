@@ -1846,12 +1846,20 @@ public class SWFDebugSession extends DebugSession {
                 String rawValue = arguments.value;
                 if (Boolean.TRUE.toString().equals(rawValue) || Boolean.FALSE.toString().equals(rawValue)) {
                     faultEvent = member.setValue(swfSession, VariableType.BOOLEAN, rawValue);
-                } else if (Pattern.compile("[0-9]*(\\.[0-9]+)?").matcher(rawValue).matches()) {
+                } else if (Pattern.compile("\\-?[0-9]*(\\.[0-9]+)?").matcher(rawValue).matches()) {
                     faultEvent = member.setValue(swfSession, VariableType.NUMBER, rawValue);
-                } else if (Pattern.compile("0x[0-9A-Fa-f]{1,7}").matcher(rawValue).matches()) {
-                    rawValue = rawValue.substring(2).toUpperCase();
-                    rawValue = Integer.parseInt(rawValue, 16) + "";
-                    sendOutputEvent(rawValue + "\n");
+                } else if (Pattern.compile("\\-?0x[0-9A-Fa-f]+").matcher(rawValue).matches()) {
+                    boolean negative = false;
+                    int offset = 2;
+                    if (rawValue.startsWith("-")) {
+                        negative = true;
+                        offset++;
+                    }
+                    rawValue = rawValue.substring(offset).toUpperCase();
+                    if (negative) {
+                        rawValue = "-" + rawValue;
+                    }
+                    rawValue = Long.parseLong(rawValue, 16) + "";
                     faultEvent = member.setValue(swfSession, VariableType.NUMBER, rawValue);
                 } else if (rawValue.startsWith("\"") && rawValue.endsWith("\"")) {
                     rawValue = rawValue.substring(1, rawValue.length() - 1);
