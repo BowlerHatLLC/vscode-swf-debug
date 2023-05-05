@@ -15,8 +15,8 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 ## Requirements
 
-- Visual Studio Code 1.60
-- Java 1.8 Runtime
+- Visual Studio Code 1.70
+- Java 8 Runtime
 - Adobe AIR or Adobe Flash Player
 
 ### Adobe AIR
