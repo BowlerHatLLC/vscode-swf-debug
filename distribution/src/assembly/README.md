@@ -21,7 +21,7 @@ Extension created and maintained by [Josh Tynjala](https://patreon.com/josht). B
 
 ### Adobe AIR
 
-To debug [Adobe AIR](https://www.adobe.com/products/air.html) applications, download the **Adobe AIR SDK** for Windows or macOS, which is available from HARMAN's website:
+To debug [Adobe AIR](https://airsdk.dev) applications, download the **Adobe AIR SDK** for Windows or macOS, which is available from HARMAN's website:
 
 - [Download Adobe AIR SDK from HARMAN](https://airsdk.harman.com/download)
 
@@ -31,9 +31,11 @@ For Adobe AIR version 32.0 or older, download it from Adobe's website instead:
 
 ### Adobe Flash Player
 
-To debug _.swf_ files in [Adobe Flash Player](https://www.adobe.com/products/flashplayer.html), download the **Flash Player projector content debugger** for Windows, macOS, or Linux, which is available from Adobe's website.
+To debug _.swf_ files in [Adobe Flash Player](https://en.wikipedia.org/wiki/Adobe_Flash_Player), download the **Flash Player projector content debugger** for Windows, macOS, or Linux, which may still be available from Adobe's website at the following locations.
 
-- [Adobe Flash Player Support Center: Debug Downloads](https://www.adobe.com/support/flashplayer/debug_downloads.html)
+- [Adobe Flash Player 32.0 content debugger for Windows](https://fpdownload.macromedia.com/pub/flashplayer/updaters/32/flashplayer_32_sa_debug.exe)
+- [Adobe Flash Player 32.0 content debugger for macOS](https://fpdownload.macromedia.com/pub/flashplayer/updaters/32/flashplayer_32_sa_debug.dmg)
+- [Adobe Flash Player 32.0 content debugger for Linux](https://fpdownload.macromedia.com/pub/flashplayer/updaters/32/flash_player_sa_linux_debug.x86_64.tar.gz)
 
 > Be sure to make the Flash Player the operating system's default program for the _.swf_ file extension. If it's not the default program, it's possible manually specify the executable path using the `runtimeExecutable` attribute in _launch.json_ instead.
 
