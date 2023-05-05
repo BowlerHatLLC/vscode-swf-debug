@@ -1,5 +1,20 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.7.0
+
+### New Features
+
+- Breakpoints: Added support for conditional breakpoints where an AS3 expression is evaluated to determine if the debugger should stop.
+- Evaluate: Enhanced to support accessing variables from outer scopes inside closures.
+- Evaluate: Enhanced to support members of `this` without requiring `this.` at the beginning.
+- Variables: When editing numeric values, now supports hexadecimal integer formatting, which starts with `0x` and contains the characters `0-9` and `A-F`.
+
+### Fixed Issues
+
+- Launch: Fixed failed detection of Adobe AIR application IDs containing the `-` character.
+- Variables: Fixed setting numeric variable with more than one digit after decimal point.
+- Variables: Fixed setting numeric variable starting with a `-` character as a negative value.
+
 ## v1.6.1
 
 ### Other Changes
