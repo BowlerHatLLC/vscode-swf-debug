@@ -3,6 +3,7 @@
 	"tasks": [
 		{
 			"label": "build",
+			"type": "shell",
 			"command": "mvn",
 			"args": [
 				"clean",
@@ -11,6 +12,7 @@
 		},
 		{
 			"label": "build-debug",
+			"type": "shell",
 			"command": "mvn",
 			"args": [
 				"package",
