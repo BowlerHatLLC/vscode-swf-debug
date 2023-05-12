@@ -2046,16 +2046,25 @@ public class SWFDebugSession extends DebugSession {
 
     protected String transformPath(String sourceFilePath) {
         int index = sourceFilePath.indexOf(SDK_PATH_SIGNATURE_UNIX);
+        boolean sourcePathIsUnix = true;
         if (index == -1) {
             index = sourceFilePath.indexOf(SDK_PATH_SIGNATURE_WINDOWS);
             if (index == -1) {
                 return sourceFilePath;
             }
+            sourcePathIsUnix = false;
         }
         if (flexHome == null) {
             return sourceFilePath;
         }
-        Path transformedPath = flexHome.resolve(sourceFilePath.substring(index + 1));
+        String relativePath = sourceFilePath.substring(index + 1);
+        boolean osIsWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
+        if (sourcePathIsUnix && osIsWindows) {
+            relativePath = relativePath.replace('/', '\\');
+        } else if (!sourcePathIsUnix && !osIsWindows) {
+            relativePath = relativePath.replace('\\', '/');
+        }
+        Path transformedPath = flexHome.resolve(relativePath);
         if (Files.exists(transformedPath)) {
             // only transform the path if the transformed file exists
             // if it doesn't exist, the original path may be valid
