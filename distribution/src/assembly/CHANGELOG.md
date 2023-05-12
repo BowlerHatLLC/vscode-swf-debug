@@ -1,5 +1,11 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.7.1
+
+### Fixed Issues
+
+- Breakpoints: Fixed detection of SDK _.as_ and _.mxml_ source files in debugger on macOS and Linux when the SDK was built on Windows.
+
 ## v1.7.0
 
 ### New Features
