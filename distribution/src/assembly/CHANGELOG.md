@@ -1,5 +1,21 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.8.0
+
+### New Features
+
+- Launch: Can now specify `env` field in _launch.json_ to set a map of environment variables.
+- Breakpoints: Hovering over a member variable or property in the editor while stopped at a breakpoint will show the value in a tool-tip.
+
+### Fixed Issues
+
+- Launch: Fixed `runtimeArgs` in _launch.json_ being ignored if `runtimeExecutable` is not specified.
+- Launch: Fixed detection of Adobe AIR application descriptor output path when the file name is generated from the main class.
+
+### Other Changes
+
+- Dependencies: Apache Royale debugger updated to v0.9.10.
+
 ## v1.7.1
 
 ### Fixed Issues
