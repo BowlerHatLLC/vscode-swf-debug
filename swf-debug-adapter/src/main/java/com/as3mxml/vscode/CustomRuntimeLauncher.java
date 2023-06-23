@@ -19,6 +19,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import flash.tools.debugger.ILauncher;
 
@@ -31,17 +35,22 @@ public class CustomRuntimeLauncher implements ILauncher {
     private static final String EXTENSION_APP = ".app";
     private String runtimeExecutable;
     private String[] runtimeArgs;
+    private Map<String, String> env;
     public boolean isAIR = false;
 
     public CustomRuntimeLauncher(String runtimeExecutablePath) {
         this(runtimeExecutablePath, null);
     }
 
-    public CustomRuntimeLauncher(String runtimeExecutable, String[] runtimeArgs) {
+    public CustomRuntimeLauncher(String runtimeExecutablePath, String[] runtimeArgs) {
+        this(runtimeExecutablePath, null, null);
+    }
+
+    public CustomRuntimeLauncher(String runtimeExecutable, String[] runtimeArgs, Map<String, String> env) {
         if (runtimeExecutable.endsWith(EXTENSION_APP)) {
-            //for convenience, we'll automatically dig into .app packages on
-            //macOS to find the real executable. easier than documenting the
-            //whole "Show Package Contents" thing in Finder.
+            // for convenience, we'll automatically dig into .app packages on
+            // macOS to find the real executable. easier than documenting the
+            // whole "Show Package Contents" thing in Finder.
             Path appPath = Paths.get(runtimeExecutable);
             Path fileNamePath = appPath.getFileName();
             String baseFileName = fileNamePath.toString();
@@ -55,10 +64,10 @@ public class CustomRuntimeLauncher implements ILauncher {
                     for (int i = 1; i < files.length; i++) {
                         File file = files[i];
                         if (file.getName().equals(baseFileName)) {
-                            //sometimes, there will be multiple executables,
-                            //and we need to guess which one is best. if the
-                            //name matches the name before .app, it's probably
-                            //the best one to use.
+                            // sometimes, there will be multiple executables,
+                            // and we need to guess which one is best. if the
+                            // name matches the name before .app, it's probably
+                            // the best one to use.
                             runtimeExecutable = file.getAbsolutePath();
                             break;
                         }
@@ -68,33 +77,30 @@ public class CustomRuntimeLauncher implements ILauncher {
         }
         this.runtimeExecutable = runtimeExecutable;
         this.runtimeArgs = runtimeArgs;
+        this.env = env;
     }
 
     public Process launch(String[] cmd) throws IOException {
-        int baseCount = cmd.length;
-        if (!isAIR) {
-            //for some reason, the debugger always includes the path to ADL in
-            //the launch arguments for a custom launcher, but not to Flash
-            //Player. we need to account for this difference in length.
-            baseCount++;
-        }
-        int extraCount = 0;
-        if (runtimeArgs != null) {
-            extraCount = runtimeArgs.length;
-        }
-        String[] finalArgs = new String[baseCount + extraCount];
-        finalArgs[0] = runtimeExecutable;
+        List<String> finalArgs = new ArrayList<>();
+        finalArgs.add(runtimeExecutable);
         if (isAIR) {
-            //as noted above, we ignore the debugger's incorrect path to ADL
-            //and start copying from index 1 instead of 0.
-            System.arraycopy(cmd, 1, finalArgs, 1, cmd.length - 1);
+            // for some reason, the debugger always includes the path to ADL in
+            // the launch arguments for a custom launcher, but not to Flash
+            // Player. we need to account for this difference in length.
+            List<String> airCmd = new ArrayList<>(Arrays.asList(cmd));
+            airCmd.remove(0);
+            finalArgs.addAll(airCmd);
         } else {
-            System.arraycopy(cmd, 0, finalArgs, 1, cmd.length);
+            finalArgs.addAll(Arrays.asList(cmd));
         }
         if (runtimeArgs != null) {
-            System.arraycopy(runtimeArgs, 0, finalArgs, baseCount, runtimeArgs.length);
+            finalArgs.addAll(Arrays.asList(runtimeArgs));
         }
-        return Runtime.getRuntime().exec(finalArgs);
+        ProcessBuilder builder = new ProcessBuilder().command(finalArgs);
+        if (env != null) {
+            builder.environment().putAll(env);
+        }
+        return builder.start();
     }
 
     public void terminate(Process process) throws IOException {

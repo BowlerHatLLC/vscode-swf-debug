@@ -652,9 +652,24 @@ public class SWFDebugSession extends DebugSession {
 
                 Player player = null;
                 CustomRuntimeLauncher launcher = null;
+                // setting environment variables requires a runtime exectutable
+                if (swfArgs.env != null && !swfArgs.env.isEmpty() && swfArgs.runtimeExecutable == null) {
+                    Player customPlayer = manager.playerForUri(program, airLaunchInfo);
+                    if (customPlayer != null) {
+                        File customPlayerFile = customPlayer.getPath();
+                        if (customPlayerFile != null) {
+                            swfArgs.runtimeExecutable = customPlayer.getPath().getAbsolutePath();
+                        }
+                    }
+                    if (swfArgs.runtimeExecutable == null) {
+                        sendErrorResponse(response, 10001,
+                                "Error launching SWF debug session. Runtime not found for program: " + program);
+                        return;
+                    }
+                }
                 if (swfArgs.runtimeExecutable != null) {
                     // if runtimeExecutable is specified, we'll launch that
-                    launcher = new CustomRuntimeLauncher(swfArgs.runtimeExecutable, swfArgs.runtimeArgs);
+                    launcher = new CustomRuntimeLauncher(swfArgs.runtimeExecutable, swfArgs.runtimeArgs, swfArgs.env);
                     if (airLaunchInfo != null) {
                         launcher.isAIR = true;
                     }

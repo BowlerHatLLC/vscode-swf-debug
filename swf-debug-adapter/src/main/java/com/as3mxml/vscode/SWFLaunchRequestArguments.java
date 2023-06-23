@@ -15,6 +15,8 @@ limitations under the License.
 */
 package com.as3mxml.vscode;
 
+import java.util.Map;
+
 import com.as3mxml.vscode.debug.requests.LaunchRequest;
 
 public class SWFLaunchRequestArguments extends LaunchRequest.LaunchRequestArguments {
@@ -29,4 +31,5 @@ public class SWFLaunchRequestArguments extends LaunchRequest.LaunchRequestArgume
     public String[] runtimeArgs;
     public String extdir;
     public String rootDirectory;
+    public Map<String, String> env;
 }
