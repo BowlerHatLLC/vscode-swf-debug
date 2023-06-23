@@ -654,7 +654,8 @@ public class SWFDebugSession extends DebugSession {
                 Player player = null;
                 CustomRuntimeLauncher launcher = null;
                 // setting environment variables requires a runtime exectutable
-                if ((swfArgs.runtimeArgs != null || (swfArgs.env != null && !swfArgs.env.isEmpty()))
+                if (((swfArgs.runtimeArgs != null && swfArgs.runtimeArgs.length > 0)
+                        || (swfArgs.env != null && !swfArgs.env.isEmpty()))
                         && swfArgs.runtimeExecutable == null) {
                     Player customPlayer = manager.playerForUri(program, airLaunchInfo);
                     if (customPlayer != null) {
