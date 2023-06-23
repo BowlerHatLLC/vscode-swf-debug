@@ -585,6 +585,7 @@ public class SWFDebugSession extends DebugSession {
         capabilities.supportsLogPoints = true;
         capabilities.supportsSetVariable = true;
         capabilities.supportsConfigurationDoneRequest = true;
+        capabilities.supportsEvaluateForHovers = true;
         sendResponse(response, capabilities);
     }
 
