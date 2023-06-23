@@ -509,23 +509,22 @@ function generateApplicationDescriptorProgram(
   outputPath: string,
   mainClassPath: string
 ) {
-  if (outputPath === null || mainClassPath === null) {
-    return null;
-  }
-  if (outputPath !== null) {
-    let descriptorName = path.basename(outputPath);
-    let index = descriptorName.indexOf(".");
-    if (index !== -1) {
-      descriptorName = descriptorName.substr(0, index);
-    }
-    return path.join(path.dirname(outputPath), descriptorName + SUFFIX_AIR_APP);
+  let descriptorName: string | null = null;
+  if (mainClassPath !== null) {
+    descriptorName = path.basename(mainClassPath);
+  } else if (outputPath !== null) {
+    descriptorName = path.basename(outputPath);
   }
 
-  let extension = path.extname(mainClassPath);
-  return (
-    mainClassPath.substr(0, mainClassPath.length - extension.length) +
-    SUFFIX_AIR_APP
-  );
+  if (!descriptorName) {
+    return null;
+  }
+
+  let index = descriptorName.indexOf(".");
+  if (index !== -1) {
+    descriptorName = descriptorName.substr(0, index);
+  }
+  return path.join(path.dirname(outputPath), descriptorName + SUFFIX_AIR_APP);
 }
 
 function findApplicationID(appDescriptorContent: string): string {
