@@ -93,7 +93,7 @@ public class CustomRuntimeLauncher implements ILauncher {
         } else {
             finalArgs.addAll(Arrays.asList(cmd));
         }
-        if (runtimeArgs != null & runtimeArgs.length > 0) {
+        if (runtimeArgs != null && runtimeArgs.length > 0) {
             finalArgs.addAll(Arrays.asList(runtimeArgs));
         }
         ProcessBuilder builder = new ProcessBuilder().command(finalArgs);

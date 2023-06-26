@@ -1,5 +1,11 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.8.1
+
+### Fixed Issues
+
+- Launch: Fixed null pointer exception when `runtimeArgs` is null.
+
 ## v1.8.0
 
 ### New Features
