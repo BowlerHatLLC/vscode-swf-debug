@@ -1967,6 +1967,9 @@ public class SWFDebugSession extends DebugSession {
         } catch (IOException e) {
         } catch (ParseException e) {
         } catch (PlayerDebugException e) {
+        } catch (Exception e) {
+            // actually, just catch all parsing exceptions
+            // needed for BowlerHatLLC/vscode-swf-debug#47
         }
 
         Value value = null;
