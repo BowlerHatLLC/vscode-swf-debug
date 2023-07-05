@@ -16,6 +16,7 @@ limitations under the License.
 package com.as3mxml.vscode;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -46,7 +47,11 @@ public class SWFDebug {
         debugSession.TRACE = traceRequests;
         debugSession.TRACE_RESPONSE = traceResponses;
         if (port == -1) {
-            debugSession.start(System.in, System.out);
+            PrintStream originalSysOut = System.out;
+            // redirect System.out to System.err because we need to keep
+            // System.out from receiving anything that isn't an DAP message
+            System.setOut(new PrintStream(System.err));
+            debugSession.start(System.in, originalSysOut);
         } else {
             ServerSocket serverSocket = null;
             try {
