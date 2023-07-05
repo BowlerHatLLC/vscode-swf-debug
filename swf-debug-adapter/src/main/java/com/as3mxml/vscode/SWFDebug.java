@@ -51,6 +51,13 @@ public class SWFDebug {
             // redirect System.out to System.err because we need to keep
             // System.out from receiving anything that isn't an DAP message
             System.setOut(new PrintStream(System.err));
+            // for debugging purposes, it may make sense to redirect System.err
+            // System.setErr(new PrintStream(System.err) {
+            // @Override
+            // public void println(String x) {
+            // debugSession.sendOutputEvent("stderr: " + x + "\n");
+            // }
+            // });
             debugSession.start(System.in, originalSysOut);
         } else {
             ServerSocket serverSocket = null;
