@@ -575,6 +575,19 @@ public class SWFDebugSession extends DebugSession {
         }
     }
 
+    public void sendOutputEvent(String message) {
+        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+        body.output = message;
+        sendEvent(new OutputEvent(body));
+    }
+
+    public void sendErrorOutputEvent(String message) {
+        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
+        body.output = message;
+        body.category = OutputEvent.CATEGORY_STDERR;
+        sendEvent(new OutputEvent(body));
+    }
+
     public void initialize(Response response, InitializeRequest.InitializeRequestArguments args) {
         OutputEvent.OutputBody body = new OutputEvent.OutputBody();
         sendEvent(new OutputEvent(body));
@@ -871,19 +884,6 @@ public class SWFDebugSession extends DebugSession {
         if (!success) {
             cleanupForwardedPort();
         }
-    }
-
-    private void sendOutputEvent(String message) {
-        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-        body.output = message;
-        sendEvent(new OutputEvent(body));
-    }
-
-    private void sendErrorOutputEvent(String message) {
-        OutputEvent.OutputBody body = new OutputEvent.OutputBody();
-        body.output = message;
-        body.category = OutputEvent.CATEGORY_STDERR;
-        sendEvent(new OutputEvent(body));
     }
 
     private boolean uninstallApp(Path workspacePath, String platform, String applicationID, Path platformSdkPath) {
