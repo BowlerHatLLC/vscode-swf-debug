@@ -1,5 +1,12 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.8.2
+
+### Fixed Issues
+
+- Evaluate: Catch more parsing exceptions when evaluating AS3 code in debugger.
+- General: Redirected stdout in dependencies to stderr when using stdout/stdin for debug adapter protocol so that it doesn't send invalid protocol messages.
+
 ## v1.8.1
 
 ### Fixed Issues
