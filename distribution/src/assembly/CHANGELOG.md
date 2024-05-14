@@ -1,5 +1,11 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.8.3
+
+### Fixed Issues
+
+- General: Fixed resolution of other paths from `asconfigPath` when _asconfig.json_ is not at the root of the workspace.
+
 ## v1.8.2
 
 ### Fixed Issues
