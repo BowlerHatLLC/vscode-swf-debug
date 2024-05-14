@@ -92,11 +92,41 @@ export default class SWFDebugConfigurationProvider
       throw new Error("SWF debugger launch failed. Java path not found.");
     }
 
+    let asconfigPath = debugConfiguration.asconfigPath;
+
+    if (
+      workspaceFolder === undefined &&
+      vscode.workspace.workspaceFolders !== undefined
+    ) {
+      // special case: launch configuration is defined in .code-workspace file
+      if (asconfigPath === undefined) {
+        vscode.window.showErrorMessage(
+          `Failed to debug SWF. Launch configurations in workspace files must specify asconfigPath field.`
+        );
+        return;
+      }
+      let asconfigPathParts = debugConfiguration.asconfigPath.split(/[\\\/]/g);
+      if (asconfigPathParts.length < 2) {
+        vscode.window.showErrorMessage(
+          `Failed to debug SWF. Launch configurations in workspace files must specify asconfigPath starting with workspace folder name.`
+        );
+        return;
+      }
+      let workspaceNameToFind = asconfigPathParts[0];
+      workspaceFolder = vscode.workspace.workspaceFolders.find(
+        (workspaceFolder) => workspaceFolder.name == workspaceNameToFind
+      );
+      if (!workspaceFolder) {
+        vscode.window.showErrorMessage(
+          `Failed to debug SWF. Workspace folder not found for file: ${asconfigPath}`
+        );
+        return;
+      }
+      asconfigPath = asconfigPathParts.slice(1).join(path.sep);
+    }
     let asconfigJSON: any = null;
     if (workspaceFolder !== undefined) {
-      var asconfigPath = debugConfiguration.asconfigPath
-        ? debugConfiguration.asconfigPath
-        : FILE_NAME_ASCONFIG_JSON;
+      asconfigPath ??= FILE_NAME_ASCONFIG_JSON;
       if (!path.isAbsolute(asconfigPath)) {
         asconfigPath = path.resolve(workspaceFolder.uri.fsPath, asconfigPath);
       }
