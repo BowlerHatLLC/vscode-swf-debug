@@ -135,6 +135,7 @@ export default class SWFDebugConfigurationProvider
     return this.resolveLaunchDebugConfiguration(
       workspaceFolder,
       asconfigJSON,
+      asconfigPath,
       paths.sdkPath,
       debugConfiguration
     );
@@ -146,6 +147,7 @@ export default class SWFDebugConfigurationProvider
     asconfigPath: string,
     debugConfiguration: SWFDebugConfiguration
   ): SWFDebugConfiguration {
+    const projectRoot = path.dirname(asconfigPath);
     let applicationID = debugConfiguration.applicationID;
     let bundle = debugConfiguration.bundle;
     let platformsdk = debugConfiguration.platformsdk;
@@ -166,11 +168,8 @@ export default class SWFDebugConfigurationProvider
           }
         }
         if (appDescriptorPath) {
-          if (workspaceFolder && !path.isAbsolute(appDescriptorPath)) {
-            appDescriptorPath = path.resolve(
-              workspaceFolder.uri.fsPath,
-              appDescriptorPath
-            );
+          if (!path.isAbsolute(appDescriptorPath)) {
+            appDescriptorPath = path.resolve(projectRoot, appDescriptorPath);
           }
           try {
             let appDescriptorContent = fs.readFileSync(
@@ -194,10 +193,16 @@ export default class SWFDebugConfigurationProvider
             let platformOptions = airOptions[platform];
             if ("output" in platformOptions) {
               bundle = platformOptions.output;
+              if (!path.isAbsolute(bundle)) {
+                bundle = path.resolve(projectRoot, bundle);
+              }
             }
           }
           if (!bundle && "output" in airOptions) {
             bundle = airOptions.output;
+            if (!path.isAbsolute(bundle)) {
+              bundle = path.resolve(projectRoot, bundle);
+            }
           }
         }
       }
@@ -238,9 +243,11 @@ export default class SWFDebugConfigurationProvider
   private resolveLaunchDebugConfiguration(
     workspaceFolder: vscode.WorkspaceFolder,
     asconfigJSON: any,
+    asconfigPath: string,
     sdkPath: string | undefined,
     debugConfiguration: SWFDebugConfiguration
   ): SWFDebugConfiguration {
+    const projectRoot = path.dirname(asconfigPath);
     let program = debugConfiguration.program;
     let appDescriptorPath: string = null;
     let outputPath: string = null;
@@ -259,30 +266,57 @@ export default class SWFDebugConfigurationProvider
       requireAIR = true;
       if (typeof asconfigJSON.application === "string") {
         appDescriptorPath = asconfigJSON.application;
+        if (!path.isAbsolute(appDescriptorPath)) {
+          appDescriptorPath = path.resolve(projectRoot, appDescriptorPath);
+        }
       } else {
         let application = asconfigJSON.application;
         switch (debugConfiguration.versionPlatform) {
           case "AND": {
             if ("android" in application) {
               appDescriptorPath = application.android;
+              if (!path.isAbsolute(appDescriptorPath)) {
+                appDescriptorPath = path.resolve(
+                  projectRoot,
+                  appDescriptorPath
+                );
+              }
             }
             break;
           }
           case "IOS": {
             if ("ios" in application) {
               appDescriptorPath = application.ios;
+              if (!path.isAbsolute(appDescriptorPath)) {
+                appDescriptorPath = path.resolve(
+                  projectRoot,
+                  appDescriptorPath
+                );
+              }
             }
             break;
           }
           case "WIN": {
             if ("windows" in application) {
               appDescriptorPath = application.windows;
+              if (!path.isAbsolute(appDescriptorPath)) {
+                appDescriptorPath = path.resolve(
+                  projectRoot,
+                  appDescriptorPath
+                );
+              }
             }
             break;
           }
           case "MAC": {
             if ("mac" in application) {
               appDescriptorPath = application.mac;
+              if (!path.isAbsolute(appDescriptorPath)) {
+                appDescriptorPath = path.resolve(
+                  projectRoot,
+                  appDescriptorPath
+                );
+              }
             }
             break;
           }
@@ -291,17 +325,41 @@ export default class SWFDebugConfigurationProvider
               //if we know it's mobile, any mobile platform should be fine
               if ("ios" in application) {
                 appDescriptorPath = application.ios;
+                if (!path.isAbsolute(appDescriptorPath)) {
+                  appDescriptorPath = path.resolve(
+                    projectRoot,
+                    appDescriptorPath
+                  );
+                }
               } else if ("android" in application) {
                 appDescriptorPath = application.android;
+                if (!path.isAbsolute(appDescriptorPath)) {
+                  appDescriptorPath = path.resolve(
+                    projectRoot,
+                    appDescriptorPath
+                  );
+                }
               }
             } else {
               //if it's desktop, then try to use the existing platform
               if (process.platform === "win32") {
                 if ("windows" in application) {
                   appDescriptorPath = application.windows;
+                  if (!path.isAbsolute(appDescriptorPath)) {
+                    appDescriptorPath = path.resolve(
+                      projectRoot,
+                      appDescriptorPath
+                    );
+                  }
                 }
               } else if ("mac" in application) {
                 appDescriptorPath = application.mac;
+                if (!path.isAbsolute(appDescriptorPath)) {
+                  appDescriptorPath = path.resolve(
+                    projectRoot,
+                    appDescriptorPath
+                  );
+                }
               }
             }
           }
@@ -324,6 +382,9 @@ export default class SWFDebugConfigurationProvider
       let compilerOptions = asconfigJSON.compilerOptions;
       if ("output" in compilerOptions) {
         outputPath = asconfigJSON.compilerOptions.output;
+        if (!path.isAbsolute(outputPath)) {
+          outputPath = path.resolve(projectRoot, outputPath);
+        }
       }
       if ("source-path" in compilerOptions) {
         sourcePath = asconfigJSON.compilerOptions["source-path"];
@@ -342,6 +403,9 @@ export default class SWFDebugConfigurationProvider
         //the last entry in the files field is the main
         //class used as the entry point.
         mainClassPath = files[files.length - 1];
+        if (!path.isAbsolute(mainClassPath)) {
+          mainClassPath = path.resolve(projectRoot, mainClassPath);
+        }
       }
     }
     if (asconfigJSON && "mainClass" in asconfigJSON) {
@@ -357,25 +421,22 @@ export default class SWFDebugConfigurationProvider
           mainClassPrefix + FILE_EXTENSION_AS
         );
         let absoluteFilePath = filePath;
-        if (workspaceFolder && !path.isAbsolute(absoluteFilePath)) {
-          absoluteFilePath = path.resolve(workspaceFolder.uri.fsPath, filePath);
+        if (!path.isAbsolute(absoluteFilePath)) {
+          absoluteFilePath = path.resolve(projectRoot, absoluteFilePath);
         }
         if (fs.existsSync(absoluteFilePath)) {
-          mainClassPath = filePath;
+          mainClassPath = absoluteFilePath;
         } else {
           let filePath = path.join(
             sourcePathEntry,
             mainClassPrefix + FILE_EXTENSION_MXML
           );
           let absoluteFilePath = filePath;
-          if (workspaceFolder && !path.isAbsolute(absoluteFilePath)) {
-            absoluteFilePath = path.resolve(
-              workspaceFolder.uri.fsPath,
-              filePath
-            );
+          if (!path.isAbsolute(absoluteFilePath)) {
+            absoluteFilePath = path.resolve(projectRoot, absoluteFilePath);
           }
           if (fs.existsSync(absoluteFilePath)) {
-            mainClassPath = filePath;
+            mainClassPath = absoluteFilePath;
           }
         }
       }
@@ -384,6 +445,9 @@ export default class SWFDebugConfigurationProvider
       let animateOptions = asconfigJSON.animateOptions;
       if ("file" in animateOptions) {
         animateFilePath = animateOptions.file;
+        if (!path.isAbsolute(animateFilePath)) {
+          animateFilePath = path.resolve(projectRoot, animateFilePath);
+        }
       }
     }
     if (program && program.endsWith(FILE_EXTENSION_XML)) {
@@ -447,8 +511,8 @@ export default class SWFDebugConfigurationProvider
 
     if (requireAIR && !debugConfiguration.extdir) {
       let programDir = path.dirname(program);
-      if (workspaceFolder && !path.isAbsolute(programDir)) {
-        programDir = path.resolve(workspaceFolder.uri.fsPath, programDir);
+      if (!path.isAbsolute(programDir)) {
+        programDir = path.resolve(projectRoot, programDir);
       }
       let unpackagedDir = path.resolve(programDir, FILE_NAME_UNPACKAGED_ANES);
       //if ANEs haven't been unpackaged, don't bother checking the library
@@ -458,8 +522,8 @@ export default class SWFDebugConfigurationProvider
         fs.statSync(unpackagedDir).isDirectory()
       ) {
         let reduceCallback = (result: string[], newItem: string) => {
-          if (workspaceFolder && !path.isAbsolute(newItem)) {
-            newItem = path.resolve(workspaceFolder.uri.fsPath, newItem);
+          if (!path.isAbsolute(newItem)) {
+            newItem = path.resolve(projectRoot, newItem);
           }
           if (newItem.endsWith(FILE_EXTENSION_ANE)) {
             result.push(newItem);
