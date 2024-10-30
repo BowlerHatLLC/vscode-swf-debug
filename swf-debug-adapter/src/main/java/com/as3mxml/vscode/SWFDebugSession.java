@@ -1056,7 +1056,8 @@ public class SWFDebugSession extends DebugSession {
     private List<Breakpoint> setBreakpoints(String path, SourceBreakpoint[] breakpoints) {
         // start by trying to find the file ID for this path
         Path pathAsPath = Paths.get(path);
-        SourceFile foundSourceFile = null;
+        // using MXML may create more than one source file with the same path
+        List<SourceFile> foundSourceFiles = new ArrayList<>();
         boolean badExtension = false;
         try {
             SwfInfo[] swfs = swfSession.getSwfs();
@@ -1080,51 +1081,41 @@ public class SWFDebugSession extends DebugSession {
                     if (pathAsPath.equals(sourceFilePath)) {
                         if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)
                                 || path.endsWith(FILE_EXTENSION_HX)) {
-                            foundSourceFile = sourceFile;
+                            foundSourceFiles.add(sourceFile);
                         } else {
                             badExtension = true;
                         }
-                        break;
                     }
-                }
-                if (foundSourceFile != null) {
-                    break;
                 }
             }
-            if (foundSourceFile == null) {
-                for (IsolateWithState isolateWithState : isolates) {
-                    Isolate isolate = isolateWithState.isolate;
-                    IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
-                    swfs = isolateSession.getSwfs();
-                    for (SwfInfo swf : swfs) {
-                        SourceFile[] sourceFiles = swf.getSourceList(swfSession);
-                        for (SourceFile sourceFile : sourceFiles) {
-                            Path sourceFilePath = null;
-                            try {
-                                String sourceFileFullPath = sourceFile.getFullPath();
-                                sourceFilePath = Paths.get(sourceFileFullPath);
-                            } catch (InvalidPathException e) {
+            for (IsolateWithState isolateWithState : isolates) {
+                if (foundSourceFiles.size() > 0) {
+                    break;
+                }
+                Isolate isolate = isolateWithState.isolate;
+                IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
+                swfs = isolateSession.getSwfs();
+                for (SwfInfo swf : swfs) {
+                    SourceFile[] sourceFiles = swf.getSourceList(swfSession);
+                    for (SourceFile sourceFile : sourceFiles) {
+                        Path sourceFilePath = null;
+                        try {
+                            String sourceFileFullPath = sourceFile.getFullPath();
+                            sourceFilePath = Paths.get(sourceFileFullPath);
+                        } catch (InvalidPathException e) {
+                            badExtension = true;
+                            continue;
+                        }
+                        // we can't check if the String paths are equal due to
+                        // file system case sensitivity.
+                        if (pathAsPath.equals(sourceFilePath)) {
+                            if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)
+                                    || path.endsWith(FILE_EXTENSION_HX)) {
+                                foundSourceFiles.add(sourceFile);
+                            } else {
                                 badExtension = true;
-                                continue;
-                            }
-                            // we can't check if the String paths are equal due to
-                            // file system case sensitivity.
-                            if (pathAsPath.equals(sourceFilePath)) {
-                                if (path.endsWith(FILE_EXTENSION_AS) || path.endsWith(FILE_EXTENSION_MXML)
-                                        || path.endsWith(FILE_EXTENSION_HX)) {
-                                    foundSourceFile = sourceFile;
-                                } else {
-                                    badExtension = true;
-                                }
-                                break;
                             }
                         }
-                        if (foundSourceFile != null) {
-                            break;
-                        }
-                    }
-                    if (foundSourceFile != null) {
-                        break;
                     }
                 }
             }
@@ -1137,13 +1128,13 @@ public class SWFDebugSession extends DebugSession {
             e.printStackTrace(new PrintWriter(writer));
             sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
         }
-        if (foundSourceFile == null && !badExtension) {
+        if (foundSourceFiles.size() == 0 && !badExtension) {
             // the file was not found, but it has a supported extension,
             // so we'll try to add it again later.
             // SWF is a streaming format, so not all bytecode is loaded
             // immediately.
             pendingBreakpoints.put(path, new PendingBreakpoints(breakpoints));
-            foundSourceFile = null;
+            foundSourceFiles.clear();
         }
         try {
             // clear all old breakpoints for this file because our new list
@@ -1171,42 +1162,50 @@ public class SWFDebugSession extends DebugSession {
             responseBreakpoint.line = sourceLine;
             responseBreakpoint.id = nextBreakpointID;
             nextBreakpointID++;
-            if (foundSourceFile == null) {
+            if (foundSourceFiles.size() == 0) {
                 // we couldn't find the file, so we can't verify this breakpoint
                 responseBreakpoint.verified = false;
             } else {
                 // we found the file, so let's try to add this breakpoint
                 // it may not work, but at least we tried!
-                responseBreakpoint.source = sourceFileToSource(foundSourceFile);
-                try {
-                    Location breakpointLocation = swfSession.setBreakpoint(foundSourceFile.getId(), sourceLine);
-                    if (breakpointLocation != null) {
-                        verifyBreakpoint(path, breakpointLocation, sourceBreakpoint, responseBreakpoint);
-                    }
-                    if (!responseBreakpoint.verified) {
+                for (SourceFile foundSourceFile : foundSourceFiles) {
+                    responseBreakpoint.source = sourceFileToSource(foundSourceFile);
+                    try {
+                        Location breakpointLocation = swfSession.setBreakpoint(foundSourceFile.getId(), sourceLine);
+                        if (breakpointLocation != null) {
+                            verifyBreakpoint(path, breakpointLocation, sourceBreakpoint, responseBreakpoint);
+                            if (responseBreakpoint.verified) {
+                                break;
+                            }
+                        }
                         for (IsolateWithState isolateWithState : isolates) {
                             Isolate isolate = isolateWithState.isolate;
                             IsolateSession isolateSession = swfSession.getWorkerSession(isolate.getId());
                             breakpointLocation = isolateSession.setBreakpoint(foundSourceFile.getId(), sourceLine);
                             if (breakpointLocation != null) {
                                 verifyBreakpoint(path, breakpointLocation, sourceBreakpoint, responseBreakpoint);
-                                break;
+                                if (responseBreakpoint.verified) {
+                                    break;
+                                }
                             }
                         }
+                        if (responseBreakpoint.verified) {
+                            break;
+                        }
+                        // setBreakpoint() may return null if the breakpoint
+                        // could not be set. that's fine. the user will simply
+                        // see that the breakpoint is not verified.
+                    } catch (NoResponseException e) {
+                        StringWriter writer = new StringWriter();
+                        e.printStackTrace(new PrintWriter(writer));
+                        sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+                        responseBreakpoint.verified = false;
+                    } catch (NotConnectedException e) {
+                        StringWriter writer = new StringWriter();
+                        e.printStackTrace(new PrintWriter(writer));
+                        sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
+                        responseBreakpoint.verified = false;
                     }
-                    // setBreakpoint() may return null if the breakpoint
-                    // could not be set. that's fine. the user will simply
-                    // see that the breakpoint is not verified.
-                } catch (NoResponseException e) {
-                    StringWriter writer = new StringWriter();
-                    e.printStackTrace(new PrintWriter(writer));
-                    sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
-                    responseBreakpoint.verified = false;
-                } catch (NotConnectedException e) {
-                    StringWriter writer = new StringWriter();
-                    e.printStackTrace(new PrintWriter(writer));
-                    sendErrorOutputEvent("Exception in debugger: " + writer.toString() + "\n");
-                    responseBreakpoint.verified = false;
                 }
             }
             result.add(responseBreakpoint);
