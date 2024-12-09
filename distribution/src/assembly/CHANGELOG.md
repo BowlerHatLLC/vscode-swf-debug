@@ -1,5 +1,17 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.9.0
+
+### Fixed Issues
+
+- Breakpoints: Fixed adding breakpoints to `<fx:Script>` inside `<fx:Component>`.
+- Launch: Fixed resolution of `asconfigPath` field in multi-root workspaces where launch configuration is defined in the _.code-workspace_ file.
+
+### Other Changes
+
+- Dependencies: Apache Royale debugger updated to v0.9.12.
+- General: Requires JDK 11 or newer due to new Royale minimum requirements. Previously JDK 8 or newer was required.
+
 ## v1.8.3
 
 ### Fixed Issues
