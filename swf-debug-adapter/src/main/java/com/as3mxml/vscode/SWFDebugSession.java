@@ -165,8 +165,6 @@ public class SWFDebugSession extends DebugSession {
     private int nextBreakpointID = 1;
     private String forwardedPortPlatform = null;
     private int forwardedPort = -1;
-    private Integer mainSwfIndex = null;
-    private String mainSwfPath = null;
     private boolean configDone = false;
 
     private class IsolateWithState {
@@ -387,18 +385,25 @@ public class SWFDebugSession extends DebugSession {
                 body.threadID = isolate.getId();
                 sendEvent(new ThreadEvent(body));
             } else if (event instanceof SwfLoadedEvent) {
-                SwfLoadedEvent loadEvent = (SwfLoadedEvent) event;
-                if (mainSwfPath == null) {
-                    mainSwfPath = loadEvent.path;
-                    mainSwfIndex = loadEvent.index;
-                }
                 refreshPendingBreakpoints();
             } else if (event instanceof SwfUnloadedEvent) {
                 SwfUnloadedEvent unloadEvent = (SwfUnloadedEvent) event;
-                if ((mainSwfPath == null && mainSwfPath == null)
-                        || (unloadEvent.path.equals(mainSwfPath) && unloadEvent.index == mainSwfIndex)) {
+                SwfInfo[] swfs = swfSession.getSwfs();
+                if (swfs.length == 0) {
+                    // this probably shouldn't happen, but let's try to be safe
                     cancelRunner = true;
                     sendEvent(new TerminatedEvent());
+                } else if (unloadEvent.index == 0 /* && unloadEvent.isolateId == Isolate.DEFAULT_ID */) {
+                    // we should be able to safely assume that the first SWF in
+                    // the main, non-worker session is the main SWF.
+                    // unfortunately, SwfUnloadedEvent doesn't tell us which
+                    // isolate the SWF is from. waiting on a pending Royale
+                    // release to make that information available.
+                    SwfInfo mainSwf = swfs[0];
+                    if (mainSwf != null && mainSwf.isUnloaded()) {
+                        cancelRunner = true;
+                        sendEvent(new TerminatedEvent());
+                    }
                 }
             }
             return false;
