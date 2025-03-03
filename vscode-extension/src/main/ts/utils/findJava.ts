@@ -15,10 +15,10 @@ limitations under the License.
 */
 import * as path from "path";
 
-export default function(
-  settingsPath: string,
+export default function (
+  settingsPath: string | null | undefined,
   validate: (javaPath: string) => boolean
-): string {
+): string | null {
   if (settingsPath) {
     if (validate(settingsPath)) {
       return settingsPath;

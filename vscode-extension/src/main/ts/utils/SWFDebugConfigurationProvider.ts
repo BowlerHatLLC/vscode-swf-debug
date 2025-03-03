@@ -52,14 +52,18 @@ interface SWFDebugConfiguration extends vscode.DebugConfiguration {
 }
 
 export type SWFDebugConfigurationPathsCallback = () => {
-  javaPath: string;
-  sdkPath?: string;
+  javaPath: string | null | undefined;
+  sdkPath?: string | null | undefined;
 };
 
 export default class SWFDebugConfigurationProvider
   implements vscode.DebugConfigurationProvider
 {
-  constructor(public pathsCallback: SWFDebugConfigurationPathsCallback) {}
+  constructor(pathsCallback: SWFDebugConfigurationPathsCallback) {
+    this.pathsCallback = pathsCallback;
+  }
+
+  pathsCallback: SWFDebugConfigurationPathsCallback;
 
   provideDebugConfigurations(
     workspaceFolder: vscode.WorkspaceFolder | undefined,
@@ -83,7 +87,7 @@ export default class SWFDebugConfigurationProvider
     workspaceFolder: vscode.WorkspaceFolder | undefined,
     debugConfiguration: SWFDebugConfiguration,
     token?: vscode.CancellationToken
-  ): SWFDebugConfiguration {
+  ): SWFDebugConfiguration | undefined {
     let paths = this.pathsCallback();
     if (!paths) {
       throw new Error("SWF debugger launch failed. Internal error.");
@@ -103,14 +107,14 @@ export default class SWFDebugConfigurationProvider
         vscode.window.showErrorMessage(
           `Failed to debug SWF. Launch configurations in workspace files must specify asconfigPath field.`
         );
-        return;
+        return undefined;
       }
-      let asconfigPathParts = debugConfiguration.asconfigPath.split(/[\\\/]/g);
+      let asconfigPathParts = asconfigPath.split(/[\\\/]/g);
       if (asconfigPathParts.length < 2) {
         vscode.window.showErrorMessage(
           `Failed to debug SWF. Launch configurations in workspace files must specify asconfigPath starting with workspace folder name.`
         );
-        return;
+        return undefined;
       }
       let workspaceNameToFind = asconfigPathParts[0];
       workspaceFolder = vscode.workspace.workspaceFolders.find(
@@ -120,17 +124,17 @@ export default class SWFDebugConfigurationProvider
         vscode.window.showErrorMessage(
           `Failed to debug SWF. Workspace folder not found for file: ${asconfigPath}`
         );
-        return;
+        return undefined;
       }
       asconfigPath = asconfigPathParts.slice(1).join(path.sep);
     }
     let asconfigJSON: any = null;
     if (workspaceFolder !== undefined) {
       asconfigPath ??= FILE_NAME_ASCONFIG_JSON;
-      if (!path.isAbsolute(asconfigPath)) {
+      if (asconfigPath && !path.isAbsolute(asconfigPath)) {
         asconfigPath = path.resolve(workspaceFolder.uri.fsPath, asconfigPath);
       }
-      if (fs.existsSync(asconfigPath)) {
+      if (asconfigPath && fs.existsSync(asconfigPath)) {
         try {
           let asconfigFile = fs.readFileSync(asconfigPath, "utf8");
           asconfigJSON = json5.parse(asconfigFile);
@@ -143,6 +147,9 @@ export default class SWFDebugConfigurationProvider
           return undefined;
         }
       }
+    }
+    if (!asconfigPath) {
+      return undefined;
     }
 
     if (!debugConfiguration.type) {
@@ -172,11 +179,11 @@ export default class SWFDebugConfigurationProvider
   }
 
   private resolveAttachDebugConfiguration(
-    workspaceFolder: vscode.WorkspaceFolder,
+    workspaceFolder: vscode.WorkspaceFolder | undefined,
     asconfigJSON: any,
     asconfigPath: string,
     debugConfiguration: SWFDebugConfiguration
-  ): SWFDebugConfiguration {
+  ): SWFDebugConfiguration | undefined {
     const projectRoot = path.dirname(asconfigPath);
     let applicationID = debugConfiguration.applicationID;
     let bundle = debugConfiguration.bundle;
@@ -185,7 +192,7 @@ export default class SWFDebugConfigurationProvider
     let platform = debugConfiguration.platform;
     if (platform) {
       if (!applicationID) {
-        let appDescriptorPath: string = null;
+        let appDescriptorPath: string | null = null;
         if (asconfigJSON && "application" in asconfigJSON) {
           if (typeof asconfigJSON.application === "string") {
             appDescriptorPath = asconfigJSON.application;
@@ -223,14 +230,14 @@ export default class SWFDebugConfigurationProvider
             let platformOptions = airOptions[platform];
             if ("output" in platformOptions) {
               bundle = platformOptions.output;
-              if (!path.isAbsolute(bundle)) {
+              if (bundle && !path.isAbsolute(bundle)) {
                 bundle = path.resolve(projectRoot, bundle);
               }
             }
           }
           if (!bundle && "output" in airOptions) {
             bundle = airOptions.output;
-            if (!path.isAbsolute(bundle)) {
+            if (bundle && !path.isAbsolute(bundle)) {
               bundle = path.resolve(projectRoot, bundle);
             }
           }
@@ -271,21 +278,21 @@ export default class SWFDebugConfigurationProvider
   }
 
   private resolveLaunchDebugConfiguration(
-    workspaceFolder: vscode.WorkspaceFolder,
+    workspaceFolder: vscode.WorkspaceFolder | undefined,
     asconfigJSON: any,
     asconfigPath: string,
-    sdkPath: string | undefined,
+    sdkPath: string | null | undefined,
     debugConfiguration: SWFDebugConfiguration
-  ): SWFDebugConfiguration {
+  ): SWFDebugConfiguration | undefined {
     const projectRoot = path.dirname(asconfigPath);
     let program = debugConfiguration.program;
-    let appDescriptorPath: string = null;
-    let outputPath: string = null;
-    let mainClassPath: string = null;
-    let animateFilePath: string = null;
-    let sourcePath: string[] = null;
-    let libraryPath: string[] = null;
-    let externalLibraryPath: string[] = null;
+    let appDescriptorPath: string | null = null;
+    let outputPath: string | null = null;
+    let mainClassPath: string | null = null;
+    let animateFilePath: string | null = null;
+    let sourcePath: string[] | null = null;
+    let libraryPath: string[] | null = null;
+    let externalLibraryPath: string[] | null = null;
     let requireAIR = false;
     let isMobile = false;
     if (asconfigJSON && "config" in asconfigJSON) {
@@ -296,7 +303,7 @@ export default class SWFDebugConfigurationProvider
       requireAIR = true;
       if (typeof asconfigJSON.application === "string") {
         appDescriptorPath = asconfigJSON.application;
-        if (!path.isAbsolute(appDescriptorPath)) {
+        if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
           appDescriptorPath = path.resolve(projectRoot, appDescriptorPath);
         }
       } else {
@@ -305,7 +312,7 @@ export default class SWFDebugConfigurationProvider
           case "AND": {
             if ("android" in application) {
               appDescriptorPath = application.android;
-              if (!path.isAbsolute(appDescriptorPath)) {
+              if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                 appDescriptorPath = path.resolve(
                   projectRoot,
                   appDescriptorPath
@@ -317,7 +324,7 @@ export default class SWFDebugConfigurationProvider
           case "IOS": {
             if ("ios" in application) {
               appDescriptorPath = application.ios;
-              if (!path.isAbsolute(appDescriptorPath)) {
+              if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                 appDescriptorPath = path.resolve(
                   projectRoot,
                   appDescriptorPath
@@ -329,7 +336,7 @@ export default class SWFDebugConfigurationProvider
           case "WIN": {
             if ("windows" in application) {
               appDescriptorPath = application.windows;
-              if (!path.isAbsolute(appDescriptorPath)) {
+              if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                 appDescriptorPath = path.resolve(
                   projectRoot,
                   appDescriptorPath
@@ -341,7 +348,7 @@ export default class SWFDebugConfigurationProvider
           case "MAC": {
             if ("mac" in application) {
               appDescriptorPath = application.mac;
-              if (!path.isAbsolute(appDescriptorPath)) {
+              if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                 appDescriptorPath = path.resolve(
                   projectRoot,
                   appDescriptorPath
@@ -355,7 +362,7 @@ export default class SWFDebugConfigurationProvider
               //if we know it's mobile, any mobile platform should be fine
               if ("ios" in application) {
                 appDescriptorPath = application.ios;
-                if (!path.isAbsolute(appDescriptorPath)) {
+                if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                   appDescriptorPath = path.resolve(
                     projectRoot,
                     appDescriptorPath
@@ -363,7 +370,7 @@ export default class SWFDebugConfigurationProvider
                 }
               } else if ("android" in application) {
                 appDescriptorPath = application.android;
-                if (!path.isAbsolute(appDescriptorPath)) {
+                if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                   appDescriptorPath = path.resolve(
                     projectRoot,
                     appDescriptorPath
@@ -375,7 +382,10 @@ export default class SWFDebugConfigurationProvider
               if (process.platform === "win32") {
                 if ("windows" in application) {
                   appDescriptorPath = application.windows;
-                  if (!path.isAbsolute(appDescriptorPath)) {
+                  if (
+                    appDescriptorPath &&
+                    !path.isAbsolute(appDescriptorPath)
+                  ) {
                     appDescriptorPath = path.resolve(
                       projectRoot,
                       appDescriptorPath
@@ -384,7 +394,7 @@ export default class SWFDebugConfigurationProvider
                 }
               } else if ("mac" in application) {
                 appDescriptorPath = application.mac;
-                if (!path.isAbsolute(appDescriptorPath)) {
+                if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                   appDescriptorPath = path.resolve(
                     projectRoot,
                     appDescriptorPath
@@ -412,7 +422,7 @@ export default class SWFDebugConfigurationProvider
       let compilerOptions = asconfigJSON.compilerOptions;
       if ("output" in compilerOptions) {
         outputPath = asconfigJSON.compilerOptions.output;
-        if (!path.isAbsolute(outputPath)) {
+        if (outputPath && !path.isAbsolute(outputPath)) {
           outputPath = path.resolve(projectRoot, outputPath);
         }
       }
@@ -433,7 +443,7 @@ export default class SWFDebugConfigurationProvider
         //the last entry in the files field is the main
         //class used as the entry point.
         mainClassPath = files[files.length - 1];
-        if (!path.isAbsolute(mainClassPath)) {
+        if (mainClassPath && !path.isAbsolute(mainClassPath)) {
           mainClassPath = path.resolve(projectRoot, mainClassPath);
         }
       }
@@ -475,7 +485,7 @@ export default class SWFDebugConfigurationProvider
       let animateOptions = asconfigJSON.animateOptions;
       if ("file" in animateOptions) {
         animateFilePath = animateOptions.file;
-        if (!path.isAbsolute(animateFilePath)) {
+        if (animateFilePath && !path.isAbsolute(animateFilePath)) {
           animateFilePath = path.resolve(projectRoot, animateFilePath);
         }
       }
@@ -570,7 +580,7 @@ export default class SWFDebugConfigurationProvider
           }
           return result;
         };
-        let anePaths = [];
+        let anePaths: string[] = [];
         if (libraryPath !== null) {
           libraryPath.reduce(reduceCallback, anePaths);
         }
@@ -600,18 +610,18 @@ export default class SWFDebugConfigurationProvider
 }
 
 function generateApplicationDescriptorProgram(
-  outputPath: string,
-  mainClassPath: string
-) {
+  outputPath: string | null | undefined,
+  mainClassPath: string | null | undefined
+): string | undefined {
   let descriptorName: string | null = null;
-  if (mainClassPath !== null) {
+  if (mainClassPath) {
     descriptorName = path.basename(mainClassPath);
-  } else if (outputPath !== null) {
+  } else if (outputPath) {
     descriptorName = path.basename(outputPath);
   }
 
-  if (!descriptorName) {
-    return null;
+  if (!descriptorName || !outputPath) {
+    return undefined;
   }
 
   let index = descriptorName.indexOf(".");
@@ -621,11 +631,11 @@ function generateApplicationDescriptorProgram(
   return path.join(path.dirname(outputPath), descriptorName + SUFFIX_AIR_APP);
 }
 
-function findApplicationID(appDescriptorContent: string): string {
+function findApplicationID(appDescriptorContent: string): string | undefined {
   // https://help.adobe.com/en_US/air/build/WSfffb011ac560372f2fea1812938a6e463-8000.html#WSfffb011ac560372f2fea1812938a6e463-7ffe
   let result = appDescriptorContent.match(/<id>([A-Za-z0-9\-\.]+)<\/id>/);
   if (result) {
     return result[1];
   }
-  return null;
+  return undefined;
 }

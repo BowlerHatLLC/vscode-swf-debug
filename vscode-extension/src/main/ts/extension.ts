@@ -19,7 +19,7 @@ import SWFDebugConfigurationProvider from "./utils/SWFDebugConfigurationProvider
 import SWFDebugAdapterDescriptorFactory from "./utils/SWFDebugAdapterDescriptorFactory";
 import * as vscode from "vscode";
 
-let savedContext: vscode.ExtensionContext = null;
+let savedContext: vscode.ExtensionContext | null | undefined = null;
 
 export function activate(context: vscode.ExtensionContext) {
   savedContext = context;
@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.debug.registerDebugAdapterDescriptorFactory(
       "swf",
-      new SWFDebugAdapterDescriptorFactory(savedContext, debugPathsCallback)
+      new SWFDebugAdapterDescriptorFactory(context, debugPathsCallback)
     )
   );
 }
@@ -51,7 +51,10 @@ export function deactivate() {
   savedContext = null;
 }
 
-function debugPathsCallback() {
+function debugPathsCallback(): {
+  javaPath: string | null | undefined;
+  sdkPath?: string | null | undefined;
+} {
   let sdkPath = undefined;
   let as3mxmlExtension = vscode.extensions.getExtension(
     "bowlerhatllc.vscode-as3mxml"
@@ -64,6 +67,9 @@ function debugPathsCallback() {
     .getConfiguration("as3mxml")
     .get("java.path") as string;
   let javaPath = findJava(javaPathSetting, (foundJavaPath) => {
+    if (!savedContext) {
+      return false;
+    }
     return validateJava(savedContext.extensionPath, foundJavaPath);
   });
 

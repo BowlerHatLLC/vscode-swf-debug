@@ -18,17 +18,23 @@ import * as vscode from "vscode";
 import getJavaClassPathDelimiter from "../utils/getJavaClassPathDelimiter";
 
 export type SWFDebugAdapterPathsCallback = () => {
-  javaPath: string;
-  sdkPath?: string;
+  javaPath: string | null | undefined;
+  sdkPath?: string | null | undefined;
 };
 
 export default class SWFDebugAdapterDescriptorFactory
   implements vscode.DebugAdapterDescriptorFactory
 {
   constructor(
-    public extensionContext: vscode.ExtensionContext,
-    public pathsCallback: SWFDebugAdapterPathsCallback
-  ) {}
+    extensionContext: vscode.ExtensionContext,
+    pathsCallback: SWFDebugAdapterPathsCallback
+  ) {
+    this.extensionContext = extensionContext;
+    this.pathsCallback = pathsCallback;
+  }
+
+  extensionContext: vscode.ExtensionContext;
+  pathsCallback: SWFDebugAdapterPathsCallback;
 
   createDebugAdapterDescriptor(
     session: vscode.DebugSession,
