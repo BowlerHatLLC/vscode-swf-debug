@@ -18,6 +18,7 @@ package com.as3mxml.vscode;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -26,6 +27,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.net.ConnectException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -36,7 +38,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.io.IOUtils;
 
 import com.as3mxml.vscode.debug.DebugSession;
 import com.as3mxml.vscode.debug.events.BreakpointEvent;
@@ -137,6 +142,7 @@ public class SWFDebugSession extends DebugSession {
     private static final String FILE_EXTENSION_BAT = ".bat";
     private static final String FILE_EXTENSION_XML = ".xml";
     private static final String ADL_BASE_NAME = "bin/adl";
+    private static final String ADL64_BASE_NAME = "bin/adl64";
     private static final String ADT_BASE_NAME = "bin/adt";
     private static final String ADB_BASE_NAME = "lib/android/bin/adb";
     private static final String IDB_BASE_NAME = "lib/aot/bin/iOSBin/idb";
@@ -147,6 +153,8 @@ public class SWFDebugSession extends DebugSession {
     private static final String PLATFORM_IOS = "ios";
     private static final String PLATFORM_IOS_SIMULATOR = "ios_simulator";
     private static final long LOCALS_VALUE_ID = 1;
+    private static final Pattern AIR_DESCRIPTOR_ARCHITECTURE_ELEMENT_PATTERN = Pattern
+            .compile("<architecture>(.*?)<\\/architecture>(?!\\s*-->)");
     private ThreadSafeSession swfSession;
     private List<IsolateWithState> isolates = new ArrayList<>();
     private Process swfRunProcess;
@@ -157,6 +165,7 @@ public class SWFDebugSession extends DebugSession {
     private Path flexlib;
     private Path flexHome;
     private Path adlPath;
+    private Path adl64Path;
     private Path adtPath;
     private Path adbPath;
     private Path idbPath;
@@ -552,11 +561,13 @@ public class SWFDebugSession extends DebugSession {
             flexlib = Paths.get(flexlibPath);
             flexHome = flexlib.getParent();
             String adlRelativePath = ADL_BASE_NAME;
+            String adl64RelativePath = ADL64_BASE_NAME;
             String adtRelativePath = ADT_BASE_NAME;
             String adbRelativePath = ADB_BASE_NAME;
             String idbRelativePath = IDB_BASE_NAME;
             if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
                 adlRelativePath += FILE_EXTENSION_EXE;
+                adl64RelativePath += FILE_EXTENSION_EXE;
                 adtRelativePath += FILE_EXTENSION_BAT;
                 adbRelativePath += FILE_EXTENSION_EXE;
                 idbRelativePath += FILE_EXTENSION_EXE;
@@ -564,6 +575,10 @@ public class SWFDebugSession extends DebugSession {
             adlPath = flexHome.resolve(adlRelativePath);
             if (!adlPath.toFile().exists()) {
                 adlPath = null;
+            }
+            adl64Path = flexHome.resolve(adl64RelativePath);
+            if (!adl64Path.toFile().exists()) {
+                adl64Path = null;
             }
             adtPath = flexHome.resolve(adtRelativePath);
             if (!adtPath.toFile().exists()) {
@@ -631,6 +646,14 @@ public class SWFDebugSession extends DebugSession {
                 }
                 AIRLaunchInfo airLaunchInfo = null;
                 if (program.endsWith(FILE_EXTENSION_XML)) {
+                    String descriptorContents = null;
+                    try {
+                        Path programPath = Paths.get(program);
+                        FileReader fileReader = new FileReader(programPath.toFile(), StandardCharsets.UTF_8);
+                        descriptorContents = IOUtils.toString(fileReader);
+                    } catch (Exception e) {
+                        // we don't strictly need this
+                    }
                     String extdir = swfArgs.extdir;
                     if (extdir != null) {
                         Path extdirPath = Paths.get(extdir);
@@ -658,6 +681,10 @@ public class SWFDebugSession extends DebugSession {
                     }
                     if (swfArgs.runtimeExecutable != null) {
                         airLaunchInfo.airDebugLauncher = Paths.get(swfArgs.runtimeExecutable).toFile();
+                    } else if (adl64Path != null && descriptorContents != null
+                            && isAdobeAIRDescriptorArchitecture64Bit(descriptorContents)) {
+                        airLaunchInfo.airDebugLauncher = adl64Path.toFile();
+                        return;
                     } else if (adlPath != null) {
                         airLaunchInfo.airDebugLauncher = adlPath.toFile();
                     } else {
@@ -2067,6 +2094,19 @@ public class SWFDebugSession extends DebugSession {
                 }
             }
         }
+    }
+
+    private boolean isAdobeAIRDescriptorArchitecture64Bit(String descriptorContents) {
+        if (descriptorContents == null) {
+            return false;
+        }
+        // (?!\s*-->) ignores lines that are commented out
+        Matcher matcher = AIR_DESCRIPTOR_ARCHITECTURE_ELEMENT_PATTERN.matcher(descriptorContents);
+        if (!matcher.matches()) {
+            return false;
+        }
+        String architecture = matcher.toMatchResult().group(1);
+        return architecture.trim().equals("64");
     }
 
     protected String transformPath(String sourceFilePath) {
