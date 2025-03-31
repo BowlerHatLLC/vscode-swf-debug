@@ -153,6 +153,7 @@ public class SWFDebugSession extends DebugSession {
     private static final String PLATFORM_IOS = "ios";
     private static final String PLATFORM_IOS_SIMULATOR = "ios_simulator";
     private static final long LOCALS_VALUE_ID = 1;
+    // (?!\s*-->) ignores lines that are commented out
     private static final Pattern AIR_DESCRIPTOR_ARCHITECTURE_ELEMENT_PATTERN = Pattern
             .compile("<architecture>(.*?)<\\/architecture>(?!\\s*-->)");
     private ThreadSafeSession swfSession;
@@ -684,7 +685,6 @@ public class SWFDebugSession extends DebugSession {
                     } else if (adl64Path != null && descriptorContents != null
                             && isAdobeAIRDescriptorArchitecture64Bit(descriptorContents)) {
                         airLaunchInfo.airDebugLauncher = adl64Path.toFile();
-                        return;
                     } else if (adlPath != null) {
                         airLaunchInfo.airDebugLauncher = adlPath.toFile();
                     } else {
@@ -2100,9 +2100,8 @@ public class SWFDebugSession extends DebugSession {
         if (descriptorContents == null) {
             return false;
         }
-        // (?!\s*-->) ignores lines that are commented out
         Matcher matcher = AIR_DESCRIPTOR_ARCHITECTURE_ELEMENT_PATTERN.matcher(descriptorContents);
-        if (!matcher.matches()) {
+        if (!matcher.find()) {
             return false;
         }
         String architecture = matcher.toMatchResult().group(1);
