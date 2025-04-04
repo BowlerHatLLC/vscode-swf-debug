@@ -1,5 +1,19 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.10.0
+
+### New Features
+
+- General: Automatically uses **adl64** executable, if it exists, and `<architecture>64</architecture>` is detected in the Adobe AIR application descriptor.
+
+### Fixed Issues
+
+- Workers: Fixed issue where a worker terminating would sometimes be incorrectly detected as the main SWF terminating instead.
+
+### Other Changes
+
+- Extension: Refactored all TypeScript code to use `strict` mode.
+
 ## v1.9.0
 
 ### Fixed Issues
