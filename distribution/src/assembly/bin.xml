@@ -42,6 +42,7 @@
         <include>commons-io-*.jar</include>
         <include>gson-*.jar</include>
         <include>guava-*.jar</include>
+        <include>failureaccess-*.jar</include>
       </includes>
       <excludes>
         <exclude>compiler-externc-*.jar</exclude>
