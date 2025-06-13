@@ -1977,22 +1977,52 @@ public class SWFDebugSession extends DebugSession {
             sendResponse(response);
             return;
         }
-        IsolateAndFrameOrValue isolateAndFrameOrValue = new IsolateAndFrameOrValue(arguments.frameId);
-        EvaluateResponseBody body = new EvaluateResponseBody();
+
+        IsolateAndFrameOrValue isolateAndFrameOrValue = null;
+        if (arguments.frameId != null) {
+            isolateAndFrameOrValue = new IsolateAndFrameOrValue(arguments.frameId);
+        } else {
+            try {
+                Frame[] swfFrames = swfSession.getFrames();
+                if (swfFrames.length > 0) {
+                    int frameId = 0; // the first item is the current frame
+                    Frame frame = swfFrames[frameId];
+                    int isolateId = frame.getIsolateId();
+                    isolateAndFrameOrValue = new IsolateAndFrameOrValue(isolateId, frameId, 0);
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        if (isolateAndFrameOrValue == null) {
+            response.success = false;
+            response.message = "Paused at a location where expression evaluation is not supported";
+            sendResponse(response);
+            return;
+        }
+
         Object evaluateResult = null;
         try {
+            Frame swfFrame = null;
             Integer frameId = isolateAndFrameOrValue.frameId;
             if (frameId != null) {
                 Frame[] swfFrames = swfSession.getFrames();
                 if (frameId >= 0 && frameId < swfFrames.length) {
-                    Frame swfFrame = swfFrames[frameId];
-
-                    ASTBuilder builder = new ASTBuilder(false);
-                    ValueExp result = builder.parse(new StringReader(arguments.expression));
-                    evaluateResult = result
-                            .evaluate(new SWFExpressionContext(swfSession, Isolate.DEFAULT_ID, swfFrame));
+                    swfFrame = swfFrames[frameId];
                 }
             }
+
+            if (swfFrame == null) {
+                response.success = false;
+                response.message = "Paused at a location where expression evaluation is not supported";
+                sendResponse(response);
+                return;
+            }
+
+            ASTBuilder builder = new ASTBuilder(false);
+            ValueExp result = builder.parse(new StringReader(arguments.expression));
+            evaluateResult = result
+                    .evaluate(new SWFExpressionContext(swfSession, swfFrame.getIsolateId(), swfFrame));
         } catch (PlayerFaultException e) {
         } catch (NoSuchVariableException e) {
         } catch (IOException e) {
@@ -2016,6 +2046,7 @@ public class SWFDebugSession extends DebugSession {
             value = (Value) evaluateResult;
         }
 
+        EvaluateResponseBody body = new EvaluateResponseBody();
         if (value != null) {
             long id = value.getId();
             if (id != Value.UNKNOWN_ID) {
