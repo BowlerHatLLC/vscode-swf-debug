@@ -32,6 +32,7 @@ import flash.tools.debugger.expression.PlayerFaultException;
 public class SWFExpressionContext implements Context {
 	public SWFExpressionContext(Session session, int isolateId, Object frameOrVariable) {
 		this.swfSession = session;
+		this.isolateId = isolateId;
 		this.frameOrVariable = frameOrVariable;
 	}
 
