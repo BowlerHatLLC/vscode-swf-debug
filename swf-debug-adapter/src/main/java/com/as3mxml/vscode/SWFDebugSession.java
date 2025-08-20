@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -157,7 +158,7 @@ public class SWFDebugSession extends DebugSession {
     private static final Pattern AIR_DESCRIPTOR_ARCHITECTURE_ELEMENT_PATTERN = Pattern
             .compile("<architecture>(.*?)<\\/architecture>(?!\\s*-->)");
     private ThreadSafeSession swfSession;
-    private List<IsolateWithState> isolates = new ArrayList<>();
+    private List<IsolateWithState> isolates = new CopyOnWriteArrayList<>();
     private Process swfRunProcess;
     private java.lang.Thread sessionThread;
     private boolean cancelRunner = false;
