@@ -53,7 +53,7 @@ export default class SWFDebugAdapterDescriptorFactory
       //"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005",
 
       "-cp",
-      this.getClassPath(),
+      this.getClassPath(paths.editorSdkPath),
       "com.as3mxml.vscode.SWFDebug",
     ];
     if (session.workspaceFolder) {
@@ -68,11 +68,28 @@ export default class SWFDebugAdapterDescriptorFactory
     return new vscode.DebugAdapterExecutable(paths.javaPath, args);
   }
 
-  private getClassPath() {
-    return (
-      path.resolve(this.extensionContext.extensionPath, "bin", "*") +
-      getJavaClassPathDelimiter() +
-      path.resolve(this.extensionContext.extensionPath, "bundled-debugger", "*")
+  private getClassPath(editorSdkPath: string | null | undefined) {
+    const extensionBinPath = path.resolve(
+      this.extensionContext.extensionPath,
+      "bin"
     );
+    const paths: string[] = [path.resolve(extensionBinPath, "*")];
+    if (editorSdkPath) {
+      const editorSdkDebuggerLibPath = path.resolve(editorSdkPath, "lib");
+      const editorSdkLibExternalPath = path.resolve(
+        editorSdkPath,
+        "lib",
+        "external"
+      );
+      paths.push(path.resolve(editorSdkDebuggerLibPath, "*"));
+      paths.push(path.resolve(editorSdkLibExternalPath, "*"));
+    } else {
+      const extensionBundledDebuggerPath = path.resolve(
+        this.extensionContext.extensionPath,
+        "bundled-debugger"
+      );
+      paths.push(path.resolve(extensionBundledDebuggerPath, "*"));
+    }
+    return paths.join(getJavaClassPathDelimiter());
   }
 }
