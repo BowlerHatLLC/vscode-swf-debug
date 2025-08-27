@@ -28,6 +28,7 @@
       <outputDirectory>bin</outputDirectory>
       <includes>
         <include>swf-debug-adapter.jar</include>
+        <include>gson-*.jar</include>
       </includes>
     </fileSet>
     <fileSet>
@@ -40,7 +41,6 @@
         <include>swfutils-*.jar</include>
         <include>antlr-2*.jar</include>
         <include>commons-io-*.jar</include>
-        <include>gson-*.jar</include>
         <include>guava-*.jar</include>
         <include>failureaccess-*.jar</include>
       </includes>
