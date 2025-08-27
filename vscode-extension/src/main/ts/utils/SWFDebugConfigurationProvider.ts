@@ -53,7 +53,8 @@ interface SWFDebugConfiguration extends vscode.DebugConfiguration {
 
 export type SWFDebugConfigurationPathsCallback = () => {
   javaPath: string | null | undefined;
-  sdkPath?: string | null | undefined;
+  frameworkSdkPath?: string | null | undefined;
+  editorSdkPath?: string | null | undefined;
 };
 
 export default class SWFDebugConfigurationProvider
@@ -173,7 +174,7 @@ export default class SWFDebugConfigurationProvider
       workspaceFolder,
       asconfigJSON,
       asconfigPath,
-      paths.sdkPath,
+      paths.frameworkSdkPath,
       debugConfiguration
     );
   }
@@ -281,7 +282,7 @@ export default class SWFDebugConfigurationProvider
     workspaceFolder: vscode.WorkspaceFolder | undefined,
     asconfigJSON: any,
     asconfigPath: string,
-    sdkPath: string | null | undefined,
+    frameworkSdkPath: string | null | undefined,
     debugConfiguration: SWFDebugConfiguration
   ): SWFDebugConfiguration | undefined {
     const projectRoot = path.dirname(asconfigPath);
@@ -542,7 +543,11 @@ export default class SWFDebugConfigurationProvider
       );
       return undefined;
     }
-    if (requireAIR && !sdkPath && !debugConfiguration.runtimeExecutable) {
+    if (
+      requireAIR &&
+      !frameworkSdkPath &&
+      !debugConfiguration.runtimeExecutable
+    ) {
       vscode.window.showErrorMessage(
         `Missing "runtime executable" path for SWF debug configuration. Requires "adl" from an Adobe AIR SDK.`
       );

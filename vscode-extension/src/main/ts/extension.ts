@@ -53,14 +53,17 @@ export function deactivate() {
 
 function debugPathsCallback(): {
   javaPath: string | null | undefined;
-  sdkPath?: string | null | undefined;
+  frameworkSdkPath?: string | null | undefined;
+  editorSdkPath?: string | null | undefined;
 } {
-  let sdkPath = undefined;
+  let frameworkSdkPath = undefined;
+  let editorSdkPath = undefined;
   let as3mxmlExtension = vscode.extensions.getExtension(
     "bowlerhatllc.vscode-as3mxml"
   );
   if (as3mxmlExtension && as3mxmlExtension.isActive) {
-    sdkPath = as3mxmlExtension.exports.frameworkSDKPath;
+    frameworkSdkPath = as3mxmlExtension.exports.frameworkSDKPath;
+    editorSdkPath = as3mxmlExtension.exports.editorSDKPath;
   }
 
   let javaPathSetting = vscode.workspace
@@ -75,6 +78,7 @@ function debugPathsCallback(): {
 
   return {
     javaPath,
-    sdkPath,
+    frameworkSdkPath,
+    editorSdkPath,
   };
 }

@@ -19,7 +19,8 @@ import getJavaClassPathDelimiter from "../utils/getJavaClassPathDelimiter";
 
 export type SWFDebugAdapterPathsCallback = () => {
   javaPath: string | null | undefined;
-  sdkPath?: string | null | undefined;
+  frameworkSdkPath?: string | null | undefined;
+  editorSdkPath?: string | null | undefined;
 };
 
 export default class SWFDebugAdapterDescriptorFactory
@@ -58,9 +59,11 @@ export default class SWFDebugAdapterDescriptorFactory
     if (session.workspaceFolder) {
       args.unshift("-Dworkspace=" + session.workspaceFolder.uri.fsPath);
     }
-    if (paths.sdkPath) {
+    if (paths.frameworkSdkPath) {
       //don't pass in an SDK unless we have one set
-      args.unshift("-Dflexlib=" + path.resolve(paths.sdkPath, "frameworks"));
+      args.unshift(
+        "-Dflexlib=" + path.resolve(paths.frameworkSdkPath, "frameworks")
+      );
     }
     return new vscode.DebugAdapterExecutable(paths.javaPath, args);
   }
