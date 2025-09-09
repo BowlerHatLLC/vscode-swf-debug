@@ -1543,7 +1543,23 @@ public class SWFDebugSession extends DebugSession {
             sendResponse(response);
             return;
         }
-        for (int i = 0, count = swfFrames.length; i < count; i++) {
+        if (arguments.startFrame >= swfFrames.length) {
+            response.success = false;
+            sendResponse(response);
+            return;
+        }
+        int startFrame = arguments.startFrame;
+        int levels = arguments.levels;
+        int totalFrames = swfFrames.length;
+        if (levels == 0) {
+            // if levels is 0, then we're expected to return all remaining frames
+            levels = totalFrames - startFrame;
+        }
+        int maxFrames = startFrame + levels;
+        if (maxFrames > totalFrames) {
+            maxFrames = totalFrames;
+        }
+        for (int i = startFrame; i < maxFrames; i++) {
             Frame swfFrame = swfFrames[i];
             Location location = swfFrame.getLocation();
             SourceFile file = location.getFile();
@@ -1562,7 +1578,7 @@ public class SWFDebugSession extends DebugSession {
             }
             stackFrames.add(stackFrame);
         }
-        sendResponse(response, new StackTraceResponseBody(stackFrames));
+        sendResponse(response, new StackTraceResponseBody(stackFrames, totalFrames));
     }
 
     public void scopes(Response response, ScopesRequest.ScopesArguments arguments) {

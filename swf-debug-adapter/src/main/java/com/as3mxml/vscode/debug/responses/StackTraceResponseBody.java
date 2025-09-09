@@ -21,16 +21,24 @@ import com.as3mxml.vscode.debug.protocol.Response;
 
 public class StackTraceResponseBody extends Response.ResponseBody {
     /**
-     * The frames of the stackframe. If the array has length zero, there are no stackframes available.
+     * The frames of the stackframe. If the array has length zero, there are no
+     * stackframes available.
      * This means that there is no location information available.
      */
     public StackFrame[] stackFrames;
+
+    public int totalFrames;
 
     public StackTraceResponseBody() {
         this.stackFrames = new StackFrame[0];
     }
 
     public StackTraceResponseBody(List<StackFrame> stackFrames) {
+        this(stackFrames, stackFrames.size());
+    }
+
+    public StackTraceResponseBody(List<StackFrame> stackFrames, int totalFrames) {
         this.stackFrames = stackFrames.toArray(new StackFrame[stackFrames.size()]);
+        this.totalFrames = totalFrames;
     }
 }
