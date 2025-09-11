@@ -34,21 +34,25 @@ export default function (
   }
 
   if ("JAVA_HOME" in process.env) {
-    let javaHome = <string>process.env.JAVA_HOME;
-    let javaPath = path.join(javaHome, "bin", executableFile);
-    if (validate(javaPath)) {
-      return javaPath;
+    const JAVA_HOME = process.env.JAVA_HOME;
+    if (JAVA_HOME) {
+      let javaPath = path.join(JAVA_HOME, "bin", executableFile);
+      if (validate(javaPath)) {
+        return javaPath;
+      }
     }
   }
 
   if ("PATH" in process.env) {
-    let PATH = <string>process.env.PATH;
-    let paths = PATH.split(path.delimiter);
-    let pathCount = paths.length;
-    for (let i = 0; i < pathCount; i++) {
-      let javaPath = path.join(paths[i], executableFile);
-      if (validate(javaPath)) {
-        return javaPath;
+    let PATH = process.env.PATH;
+    if (PATH) {
+      let paths = PATH.split(path.delimiter);
+      let pathCount = paths.length;
+      for (let i = 0; i < pathCount; i++) {
+        let javaPath = path.join(paths[i], executableFile);
+        if (validate(javaPath)) {
+          return javaPath;
+        }
       }
     }
   }

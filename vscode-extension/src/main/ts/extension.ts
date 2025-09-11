@@ -66,9 +66,9 @@ function debugPathsCallback(): {
     editorSdkPath = as3mxmlExtension.exports.editorSDKPath;
   }
 
-  let javaPathSetting = vscode.workspace
+  const javaPathSetting: string | undefined | null = vscode.workspace
     .getConfiguration("as3mxml")
-    .get("java.path") as string;
+    .get("java.path");
   let javaPath = findJava(javaPathSetting, (foundJavaPath) => {
     if (!savedContext) {
       return false;
