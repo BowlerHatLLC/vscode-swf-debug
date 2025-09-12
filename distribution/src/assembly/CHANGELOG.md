@@ -1,5 +1,17 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.11.0
+
+### New Features
+
+- General: Recognizes the `as3mxml.sdk.editor` setting from the AS3 & MXML language extension. If set to an Apache Royale SDK, this extension will prefer the debugger from the SDK instead of using the bundled debugger. Useful for testing debugger improvements in nightly builds of Royale without recompiling this extension.
+
+### Fixed Issues
+
+- Expressions: Fixed exception when attempting to evaluate an expression when the debugger is paused somewhere that expression evaluation is not supported. Displays a more user friendly message instead.
+- Stack Trace: Fixed loading more stack frames duplicating the same set as before.
+- Workers: Fixed concurrent modification exception when iterating over workers and adding or removing workers in separate threads.
+
 ## v1.10.0
 
 ### New Features
