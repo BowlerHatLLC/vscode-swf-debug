@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,12 +24,16 @@ public class Message {
     public int id;
 
     /**
-     * A format string for the message. Embedded variables have the form '{name}'.\nIf variable name starts with an underscore character, the variable does not contain user data (PII) and can be safely used for telemetry purposes.
+     * A format string for the message. Embedded variables have the form
+     * '{name}'.\nIf variable name starts with an underscore character, the variable
+     * does not contain user data (PII) and can be safely used for telemetry
+     * purposes.
      */
     public String format;
 
     /**
-     * An object used as a dictionary for looking up the variables in the format string.
+     * An object used as a dictionary for looking up the variables in the format
+     * string.
      */
     public Map<String, String> variables;
 
@@ -49,7 +53,8 @@ public class Message {
     public String url;
 
     /**
-     * An optional label that is presented to the user as the UI for opening the url.
+     * An optional label that is presented to the user as the UI for opening the
+     * url.
      */
     public String urlLabel;
 

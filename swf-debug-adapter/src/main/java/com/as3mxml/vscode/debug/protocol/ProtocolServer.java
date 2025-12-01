@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -125,9 +125,9 @@ public abstract class ProtocolServer {
         Request request = gson.fromJson(req, Request.class);
         if (request != null && request.type.equals("request")) {
             switch (request.command) {
-            case InitializeRequest.REQUEST_COMMAND: {
-                request = gson.fromJson(req, InitializeRequest.class);
-            }
+                case InitializeRequest.REQUEST_COMMAND: {
+                    request = gson.fromJson(req, InitializeRequest.class);
+                }
             }
             Request.RequestArguments arguments = null;
             try {

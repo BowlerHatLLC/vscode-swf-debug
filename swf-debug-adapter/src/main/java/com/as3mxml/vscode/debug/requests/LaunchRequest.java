@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ public class LaunchRequest extends Request {
 
     public static class LaunchRequestArguments extends RequestArguments {
         /**
-         * If noDebug is true the launch request should launch the program without enabling debugging.
+         * If noDebug is true the launch request should launch the program without
+         * enabling debugging.
          */
         public boolean noDebug = false;
     }

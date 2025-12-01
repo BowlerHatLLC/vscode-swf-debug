@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,22 +22,26 @@ public class Variable {
     public String name;
 
     /**
-     * The variable's value. This can be a multi-line text, e.g. for a function the body of a function.
+     * The variable's value. This can be a multi-line text, e.g. for a function the
+     * body of a function.
      */
     public String value;
 
     /**
-     * The type of the variable's value. Typically shown in the UI when hovering over the value.
+     * The type of the variable's value. Typically shown in the UI when hovering
+     * over the value.
      */
     public String type;
 
     /**
-     * Optional evaluatable name of this variable which can be passed to the 'EvaluateRequest' to fetch the variable's value.
+     * Optional evaluatable name of this variable which can be passed to the
+     * 'EvaluateRequest' to fetch the variable's value.
      */
     public String evaluateName;
 
     /**
-     * If variablesReference is > 0, the variable is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
+     * If variablesReference is > 0, the variable is structured and its children can
+     * be retrieved by passing variablesReference to the VariablesRequest.
      */
     public Long variablesReference = 0L;
 
@@ -52,7 +56,8 @@ public class Variable {
     public Integer indexedVariables = null;
 
     /**
-     * Properties of a variable that can be used to determine how to render the variable in the UI.
+     * Properties of a variable that can be used to determine how to render the
+     * variable in the UI.
      */
     public VariablePresentationHint presentationHint;
 }

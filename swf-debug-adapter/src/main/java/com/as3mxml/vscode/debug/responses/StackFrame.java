@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@ import com.as3mxml.vscode.debug.requests.Source;
 
 public class StackFrame {
     /**
-     * An identifier for the stack frame. It must be unique across all threads. This id can be used to retrieve the scopes of the frame with the 'scopesRequest' or to restart the execution of a stackframe.
+     * An identifier for the stack frame. It must be unique across all threads. This
+     * id can be used to retrieve the scopes of the frame with the 'scopesRequest'
+     * or to restart the execution of a stackframe.
      */
     public int id;
 
@@ -34,12 +36,14 @@ public class StackFrame {
     public Source source;
 
     /**
-     * The line within the file of the frame. If source is null or doesn't exist, line is 0 and must be ignored.
+     * The line within the file of the frame. If source is null or doesn't exist,
+     * line is 0 and must be ignored.
      */
     public int line;
 
     /**
-     * The column within the line. If source is null or doesn't exist, column is 0 and must be ignored.
+     * The column within the line. If source is null or doesn't exist, column is 0
+     * and must be ignored.
      */
     public int column;
 }

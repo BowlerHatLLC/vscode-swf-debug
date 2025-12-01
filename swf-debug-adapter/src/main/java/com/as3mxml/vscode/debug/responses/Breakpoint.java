@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,12 +27,14 @@ public class Breakpoint {
     public Integer id = null;
 
     /**
-     * If true breakpoint could be set (but not necessarily at the desired location).
+     * If true breakpoint could be set (but not necessarily at the desired
+     * location).
      */
     public boolean verified = false;
 
     /**
-     * An optional message about the state of the breakpoint. This is shown to the user and can be used to explain why a breakpoint could not be verified.
+     * An optional message about the state of the breakpoint. This is shown to the
+     * user and can be used to explain why a breakpoint could not be verified.
      */
     public String message = null;
 
@@ -57,7 +59,8 @@ public class Breakpoint {
     public Integer endLine = null;
 
     /**
-     * An optional end column of the actual range covered by the breakpoint. If no end line is given, then the end column is assumed to be in the start line
+     * An optional end column of the actual range covered by the breakpoint. If no
+     * end line is given, then the end column is assumed to be in the start line
      */
     public Integer endColumn = null;
 }

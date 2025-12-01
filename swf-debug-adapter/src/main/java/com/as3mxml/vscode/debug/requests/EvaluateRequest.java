@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,16 +26,20 @@ public class EvaluateRequest extends Request {
         /** The expression to evaluate. */
         public String expression;
 
-        /** Evaluate the expression in the scope of this stack frame. If not specified, the expression is evaluated in the global scope. */
+        /**
+         * Evaluate the expression in the scope of this stack frame. If not specified,
+         * the expression is evaluated in the global scope.
+         */
         public Integer frameId;
 
-        /** The context in which the evaluate request is run.
-            Values:
-            'watch': evaluate is run in a watch.
-            'repl': evaluate is run from REPL console.
-            'hover': evaluate is run from a data hover.
-            etc.
-        */
+        /**
+         * The context in which the evaluate request is run.
+         * Values:
+         * 'watch': evaluate is run in a watch.
+         * 'repl': evaluate is run from REPL console.
+         * 'hover': evaluate is run from a data hover.
+         * etc.
+         */
         public String context;
     }
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,12 +22,14 @@ public class Scope {
     public String name;
 
     /**
-     * The variables of this scope can be retrieved by passing the value of variablesReference to the VariablesRequest.
+     * The variables of this scope can be retrieved by passing the value of
+     * variablesReference to the VariablesRequest.
      */
     public long variablesReference;
 
     /**
-     * If true, the number of variables in this scope is large or expensive to retrieve.
+     * If true, the number of variables in this scope is large or expensive to
+     * retrieve.
      */
     public boolean expensive;
 }

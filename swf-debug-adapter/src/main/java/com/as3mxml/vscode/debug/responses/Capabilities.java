@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,17 +34,20 @@ public class Capabilities extends Response.ResponseBody {
     public boolean supportsConditionalBreakpoints = false;
 
     /**
-     * The debug adapter supports breakpoints that break execution after a specified number of hits.
+     * The debug adapter supports breakpoints that break execution after a specified
+     * number of hits.
      */
     public boolean supportsHitConditionalBreakpoints = false;
 
     /**
-     * The debug adapter supports a (side effect free) evaluate request for data hovers.
+     * The debug adapter supports a (side effect free) evaluate request for data
+     * hovers.
      */
     public boolean supportsEvaluateForHovers = false;
 
     /**
-     * The debug adapter supports stepping back via the stepBack and reverseContinue requests.
+     * The debug adapter supports stepping back via the stepBack and reverseContinue
+     * requests.
      */
     public boolean supportsStepBack = false;
 
@@ -79,17 +82,21 @@ public class Capabilities extends Response.ResponseBody {
     public boolean supportsModulesRequest = false;
 
     /**
-     * The debug adapter supports the RestartRequest. In this case a client should not implement 'restart' by terminating and relaunching the adapter but by calling the RestartRequest.
+     * The debug adapter supports the RestartRequest. In this case a client should
+     * not implement 'restart' by terminating and relaunching the adapter but by
+     * calling the RestartRequest.
      */
     public boolean supportsRestartRequest = false;
 
     /**
-     * The debug adapter supports 'exceptionOptions' on the setExceptionBreakpoints request.
+     * The debug adapter supports 'exceptionOptions' on the setExceptionBreakpoints
+     * request.
      */
     public boolean supportsExceptionOptions = false;
 
     /**
-     * The debug adapter supports a 'format' attribute on the stackTraceRequest, variablesRequest, and evaluateRequest.
+     * The debug adapter supports a 'format' attribute on the stackTraceRequest,
+     * variablesRequest, and evaluateRequest.
      */
     public boolean supportsValueFormattingOptions = false;
 
@@ -114,7 +121,8 @@ public class Capabilities extends Response.ResponseBody {
     public boolean supportsExceptionInfoRequest;
 
     /**
-     * The debug adapter supports logpoints by interpreting the 'logMessage' attribute of the SourceBreakpoint.
+     * The debug adapter supports logpoints by interpreting the 'logMessage'
+     * attribute of the SourceBreakpoint.
      */
     public boolean supportsLogPoints;
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -67,7 +67,7 @@ public class DeviceInstallUtils {
 		try {
 			ProcessBuilder builder = new ProcessBuilder().command(options).directory(cwd).inheritIO();
 			String simulatorDeviceName = null;
-			if(PLATFORM_IOS_SIMULATOR.equals(platform)) {
+			if (PLATFORM_IOS_SIMULATOR.equals(platform)) {
 				simulatorDeviceName = System.getenv(ENV_AIR_IOS_SIMULATOR_DEVICE);
 				if (simulatorDeviceName == null) {
 					simulatorDeviceName = findSimulatorName(workspacePath);
@@ -118,7 +118,7 @@ public class DeviceInstallUtils {
 		try {
 			ProcessBuilder builder = new ProcessBuilder().command(options).directory(cwd).inheritIO();
 			String simulatorDeviceName = null;
-			if(PLATFORM_IOS_SIMULATOR.equals(platform)) {
+			if (PLATFORM_IOS_SIMULATOR.equals(platform)) {
 				simulatorDeviceName = System.getenv(ENV_AIR_IOS_SIMULATOR_DEVICE);
 				if (simulatorDeviceName == null) {
 					simulatorDeviceName = findSimulatorName(workspacePath);
@@ -168,7 +168,7 @@ public class DeviceInstallUtils {
 		try {
 			ProcessBuilder builder = new ProcessBuilder().command(options).directory(cwd).inheritIO();
 			String simulatorDeviceName = null;
-			if(PLATFORM_IOS_SIMULATOR.equals(platform)) {
+			if (PLATFORM_IOS_SIMULATOR.equals(platform)) {
 				simulatorDeviceName = System.getenv(ENV_AIR_IOS_SIMULATOR_DEVICE);
 				if (simulatorDeviceName == null) {
 					simulatorDeviceName = findSimulatorName(workspacePath);

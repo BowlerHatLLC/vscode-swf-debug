@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -264,77 +264,81 @@ public abstract class DebugSession extends ProtocolServer {
         }
     }
 
-    /*protected String convertDebuggerPathToClient(String path)
-    {
-        if (_debuggerPathsAreURI)
-        {
-            if (_clientPathsAreURI)
-            {
-                return path;
-            }
-            else
-            {
-                Uri uri = new Uri(path);
-                return uri.LocalPath;
-            }
-        }
-        else
-        {
-            if (_clientPathsAreURI)
-            {
-                try
-                {
-                    var uri = new System.Uri(path);
-                    return uri.AbsoluteUri;
-                }
-                catch {
-                return null;
-            }
-            }
-            else
-            {
-                return path;
-            }
-        }
-    }*/
+    /*
+     * protected String convertDebuggerPathToClient(String path)
+     * {
+     * if (_debuggerPathsAreURI)
+     * {
+     * if (_clientPathsAreURI)
+     * {
+     * return path;
+     * }
+     * else
+     * {
+     * Uri uri = new Uri(path);
+     * return uri.LocalPath;
+     * }
+     * }
+     * else
+     * {
+     * if (_clientPathsAreURI)
+     * {
+     * try
+     * {
+     * var uri = new System.Uri(path);
+     * return uri.AbsoluteUri;
+     * }
+     * catch {
+     * return null;
+     * }
+     * }
+     * else
+     * {
+     * return path;
+     * }
+     * }
+     * }
+     */
 
-    /*protected String convertClientPathToDebugger(String clientPath)
-    {
-        if (clientPath == null)
-        {
-            return null;
-        }
-    
-        if (_debuggerPathsAreURI)
-        {
-            if (_clientPathsAreURI)
-            {
-                return clientPath;
-            }
-            else
-            {
-                var uri = new System.Uri(clientPath);
-                return uri.AbsoluteUri;
-            }
-        }
-        else
-        {
-            if (_clientPathsAreURI)
-            {
-                if (Uri.IsWellFormedUriString(clientPath, UriKind.Absolute))
-                {
-                    Uri uri = new Uri(clientPath);
-                    return uri.LocalPath;
-                }
-                System.err.println("path not well formed: '{0}'", clientPath);
-                return null;
-            }
-            else
-            {
-                return clientPath;
-            }
-        }
-    }*/
+    /*
+     * protected String convertClientPathToDebugger(String clientPath)
+     * {
+     * if (clientPath == null)
+     * {
+     * return null;
+     * }
+     * 
+     * if (_debuggerPathsAreURI)
+     * {
+     * if (_clientPathsAreURI)
+     * {
+     * return clientPath;
+     * }
+     * else
+     * {
+     * var uri = new System.Uri(clientPath);
+     * return uri.AbsoluteUri;
+     * }
+     * }
+     * else
+     * {
+     * if (_clientPathsAreURI)
+     * {
+     * if (Uri.IsWellFormedUriString(clientPath, UriKind.Absolute))
+     * {
+     * Uri uri = new Uri(clientPath);
+     * return uri.LocalPath;
+     * }
+     * System.err.println("path not well formed: '{0}'", clientPath);
+     * return null;
+     * }
+     * else
+     * {
+     * return clientPath;
+     * }
+     * }
+     * }
+     */
 
     protected Gson createGson() {
         GsonBuilder builder = new GsonBuilder();

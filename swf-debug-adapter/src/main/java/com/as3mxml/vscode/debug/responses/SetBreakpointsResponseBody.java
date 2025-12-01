@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import com.as3mxml.vscode.debug.protocol.Response;
 
 public class SetBreakpointsResponseBody extends Response.ResponseBody {
     /**
-     * Information about the breakpoints. The array elements are in the same order as the elements of the 'breakpoints' (or the deprecated 'lines') in the SetBreakpointsArguments.
+     * Information about the breakpoints. The array elements are in the same order
+     * as the elements of the 'breakpoints' (or the deprecated 'lines') in the
+     * SetBreakpointsArguments.
      */
     public Breakpoint[] breakpoints;
 

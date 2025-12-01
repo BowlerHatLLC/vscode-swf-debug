@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,19 +21,29 @@ public class EvaluateResponseBody extends Response.ResponseBody {
     /** The result of the evaluate request. */
     public String result;
 
-    /** The type of the new value. Typically shown in the UI when hovering over the value. */
+    /**
+     * The type of the new value. Typically shown in the UI when hovering over the
+     * value.
+     */
     public String type;
 
-    /** If variablesReference is > 0, the new value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest. */
+    /**
+     * If variablesReference is > 0, the new value is structured and its children
+     * can be retrieved by passing variablesReference to the VariablesRequest.
+     */
     public Long variablesReference = 0L;
 
-    /** The number of named child variables.
-        The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
-    */
+    /**
+     * The number of named child variables.
+     * The client can use this optional information to present the variables in a
+     * paged UI and fetch them in chunks.
+     */
     public Integer namedVariables;
 
-    /** The number of indexed child variables.
-        The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
-    */
+    /**
+     * The number of indexed child variables.
+     * The client can use this optional information to present the variables in a
+     * paged UI and fetch them in chunks.
+     */
     public Integer indexedVariables;
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2016-2019 Bowler Hat LLC
+Copyright 2016-2025 Bowler Hat LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ export default function validateJava(
   }
   let args = [
     "-jar",
-    path.join(extensionPath, "bin", "swf-debug-check-java-version.jar")
+    path.join(extensionPath, "bin", "swf-debug-check-java-version.jar"),
   ];
   let result = child_process.spawnSync(javaPath, args);
   return result.status === 0;
