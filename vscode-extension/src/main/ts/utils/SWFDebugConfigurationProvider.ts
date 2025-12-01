@@ -32,6 +32,16 @@ const CONFIG_AIRMOBILE = "airmobile";
 
 const PROFILE_MOBILE_DEVICE = "mobileDevice";
 
+const AIR_PLATFORM_TYPES = [
+  "air",
+  "ios",
+  "ios_simulator",
+  "android",
+  "windows",
+  "mac",
+  "linux",
+];
+
 interface SWFDebugConfiguration extends vscode.DebugConfiguration {
   program?: string;
   profile?: string;
@@ -129,24 +139,48 @@ export default class SWFDebugConfigurationProvider
       }
       asconfigPath = asconfigPathParts.slice(1).join(path.sep);
     }
-    let asconfigJSON: any = null;
+    let asconfigJSON: any | null = null;
     if (workspaceFolder !== undefined) {
       asconfigPath ??= FILE_NAME_ASCONFIG_JSON;
-      if (asconfigPath && !path.isAbsolute(asconfigPath)) {
+      if (!path.isAbsolute(asconfigPath)) {
         asconfigPath = path.resolve(workspaceFolder.uri.fsPath, asconfigPath);
       }
-      if (asconfigPath && fs.existsSync(asconfigPath)) {
-        try {
-          let asconfigFile = fs.readFileSync(asconfigPath, "utf8");
-          asconfigJSON = json5.parse(asconfigFile);
-        } catch (error) {
-          //something went terribly wrong!
-          vscode.window.showErrorMessage(
-            `Failed to debug SWF. Error reading file: ${asconfigPath}`
-          );
-          console.error(error);
-          return undefined;
+      let currentAsconfigPath: string | null = asconfigPath;
+      while (currentAsconfigPath) {
+        if (fs.existsSync(currentAsconfigPath)) {
+          try {
+            const asconfigFile: string = fs.readFileSync(
+              currentAsconfigPath,
+              "utf8"
+            );
+            const parsedAsconfigFile: any = json5.parse(asconfigFile);
+            if (asconfigJSON) {
+              asconfigJSON = mergeConfigs(asconfigJSON, parsedAsconfigFile);
+            } else {
+              asconfigJSON = parsedAsconfigFile;
+            }
+            if (parsedAsconfigFile.extends) {
+              currentAsconfigPath = parsedAsconfigFile.extends;
+              if (currentAsconfigPath) {
+                if (!path.isAbsolute(currentAsconfigPath)) {
+                  currentAsconfigPath = path.resolve(
+                    workspaceFolder.uri.fsPath,
+                    currentAsconfigPath
+                  );
+                }
+                continue;
+              }
+            }
+          } catch (error) {
+            //something went terribly wrong!
+            vscode.window.showErrorMessage(
+              `Failed to debug SWF. Error reading file: ${currentAsconfigPath}`
+            );
+            console.error(error);
+            return undefined;
+          }
         }
+        currentAsconfigPath = null;
       }
     }
     if (!asconfigPath) {
@@ -643,4 +677,276 @@ function findApplicationID(appDescriptorContent: string): string | undefined {
     return result[1];
   }
   return undefined;
+}
+
+function mergeConfigs(configData: any, baseConfigData: any): any {
+  const result: any = {};
+  const keys = new Set<PropertyKey>();
+  for (const key in baseConfigData) {
+    if (baseConfigData.hasOwnProperty(key)) {
+      keys.add(key);
+    }
+  }
+  for (const key in configData) {
+    if (configData.hasOwnProperty(key)) {
+      keys.add(key);
+    }
+  }
+  keys.forEach(function (
+    value: PropertyKey,
+    key: PropertyKey,
+    set: Set<PropertyKey>
+  ): void {
+    if (key === "extends") {
+      //safe to skip
+      return;
+    }
+    var hasConfig = configData.hasOwnProperty(key);
+    var hasBase = baseConfigData.hasOwnProperty(key);
+    if (hasConfig && hasBase) {
+      if (key === "application") {
+        result[key] = mergeApplication(configData[key], baseConfigData[key]);
+      } else if (key === "compilerOptions") {
+        result[key] = mergeCompilerOptions(
+          configData[key],
+          baseConfigData[key]
+        );
+      } else if (key === "airOptions") {
+        result[key] = mergeAIROptions(
+          configData[key],
+          baseConfigData[key],
+          true
+        );
+      } else {
+        result[key] = mergeObjectsSimple(configData[key], baseConfigData[key]);
+      }
+    } else if (hasConfig) {
+      result[key] = configData[key];
+    } else if (hasBase) {
+      result[key] = baseConfigData[key];
+    }
+  });
+  return result;
+}
+
+function mergeObjectsSimple(object: any, baseObject: any): any {
+  if (typeof object !== "object" || Array.isArray(object)) {
+    return object;
+  }
+  var result: any = {};
+  for (const key in baseObject) {
+    if (baseObject.hasOwnProperty(key)) {
+      result[key] = baseObject[key];
+    }
+  }
+  for (const key in object) {
+    if (object.hasOwnProperty(key)) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
+function mergeArrays(array: any[], baseArray: any[]): any[] {
+  const result: any[] = baseArray.slice();
+  for (const item of array) {
+    const isObject = typeof item === "object";
+    if (
+      !result.find(function (existingItem: any): boolean {
+        if (isObject) {
+          for (const key in existingItem) {
+            if (!(key in item) || item[key] !== existingItem[key]) {
+              return false;
+            }
+          }
+          for (const key in item) {
+            if (!(key in existingItem) || item[key] !== existingItem[key]) {
+              return false;
+            }
+          }
+          return true;
+        }
+        return item === existingItem;
+      })
+    ) {
+      result.push(item);
+    }
+  }
+  return result;
+}
+
+function mergeArrayWithComparisonKey(
+  array: any[],
+  baseArray: any[],
+  comparisonKey: string
+): any[] {
+  var result: any[] = array.slice();
+  var values = new Set<any>();
+  for (const pair of array) {
+    values.add(pair[comparisonKey]);
+  }
+  for (const pair of baseArray) {
+    var valueToCompare: any = pair[comparisonKey];
+    if (values.has(valueToCompare)) {
+      //if we already added this value, skip it because its been
+      //overridden in the main config
+      continue;
+    }
+    result.push(pair);
+  }
+  return result;
+}
+
+function mergeCompilerOptions(
+  compilerOptions: any,
+  baseCompilerOptions: any
+): any {
+  const result: any = {};
+  for (const key in baseCompilerOptions) {
+    if (baseCompilerOptions.hasOwnProperty(key)) {
+      result[key] = baseCompilerOptions[key];
+    }
+  }
+  for (const key in compilerOptions) {
+    if (compilerOptions.hasOwnProperty(key)) {
+      var newValue: any = compilerOptions[key];
+      if (key === "define") {
+        if (result.hasOwnProperty(key)) {
+          var oldDefine: any = result[key];
+          result[key] = mergeArrayWithComparisonKey(
+            newValue as any[],
+            oldDefine as any[],
+            "name"
+          );
+        } else {
+          result[key] = newValue;
+        }
+      } else if (Array.isArray(newValue)) {
+        if (result.hasOwnProperty(key)) {
+          var oldArray: any = result[key];
+          if (Array.isArray(oldArray)) {
+            result[key] = mergeArrays(newValue as any[], oldArray as any[]);
+          } else {
+            result[key] = newValue;
+          }
+        } else {
+          result[key] = newValue;
+        }
+      } else {
+        result[key] = newValue;
+      }
+    }
+  }
+  return result;
+}
+
+function mergeApplication(application: any, baseApplication: any): any {
+  if (typeof application === "string") {
+    //overrides all fields
+    return application;
+  }
+  var result: any = {};
+  if (typeof baseApplication === "string") {
+    for (const key in AIR_PLATFORM_TYPES) {
+      if (AIR_PLATFORM_TYPES.hasOwnProperty(key)) {
+        var keyValue = AIR_PLATFORM_TYPES[key];
+        result[keyValue] = baseApplication;
+      }
+    }
+  } else {
+    result = baseApplication;
+  }
+  return mergeObjectsSimple(application, result);
+}
+
+function mergeAIROptions(
+  airOptions: any,
+  baseAIROptions: any,
+  handlePlatforms: boolean
+): any {
+  const result: any = {};
+  const keys = new Set<PropertyKey>();
+  for (const key in baseAIROptions) {
+    if (baseAIROptions.hasOwnProperty(key)) {
+      keys.add(key);
+    }
+  }
+  for (const key in airOptions) {
+    if (airOptions.hasOwnProperty(key)) {
+      keys.add(key);
+    }
+  }
+  var platforms = new Set();
+  for (const key in AIR_PLATFORM_TYPES) {
+    if (AIR_PLATFORM_TYPES.hasOwnProperty(key)) {
+      var keyValue = AIR_PLATFORM_TYPES[key];
+      platforms.add(keyValue);
+    }
+  }
+  keys.forEach(function (
+    value: PropertyKey,
+    key: PropertyKey,
+    set: Set<PropertyKey>
+  ): void {
+    var hasConfig: Boolean = airOptions.hasOwnProperty(key);
+    var hasBase: Boolean = baseAIROptions.hasOwnProperty(key);
+    if (hasConfig && hasBase) {
+      var newValue: any = airOptions[key];
+      var baseValue: any = baseAIROptions[key];
+      if (handlePlatforms && platforms.has(key)) {
+        result[key] = mergeAIROptions(newValue, baseValue, false);
+      } else if (key === "files") {
+        result[key] = mergeArrayWithComparisonKey(
+          newValue as any[],
+          baseValue as any[],
+          "path"
+        );
+      } else if (key === "signingOptions") {
+        result[key] = mergeSigningOptions(newValue, baseValue);
+      } else if (Array.isArray(newValue) && Array.isArray(baseValue)) {
+        result[key] = mergeArrays(newValue as any[], baseValue as any[]);
+      } else {
+        result[key] = mergeObjectsSimple(airOptions[key], baseAIROptions[key]);
+      }
+    } else if (hasConfig) {
+      result[key] = airOptions[key];
+    } else if (hasBase) {
+      result[key] = baseAIROptions[key];
+    }
+  });
+  return result;
+}
+
+function mergeSigningOptions(
+  signingOptions: any,
+  baseSigningOptions: any
+): any {
+  const hasDebug = signingOptions.hasOwnProperty("debug");
+  const hasRelease = signingOptions.hasOwnProperty("release");
+  if (!hasDebug && !hasRelease) {
+    //nothing to merge. fully overrides the base
+    return signingOptions;
+  }
+  if (hasDebug && hasRelease) {
+    //also fully overrides the base
+    return signingOptions;
+  }
+  const hasBaseDebug: Boolean = baseSigningOptions.hasOwnProperty("debug");
+  const hasBaseRelease: Boolean = baseSigningOptions.hasOwnProperty("release");
+  const result: any = {};
+  if (hasDebug) {
+    result["debug"] = signingOptions["debug"];
+  } else if (hasBaseDebug) {
+    result["debug"] = baseSigningOptions["debug"];
+  } else if (!hasBaseRelease) {
+    result["debug"] = baseSigningOptions;
+  }
+  if (hasRelease) {
+    result["release"] = signingOptions["release"];
+  } else if (hasBaseRelease) {
+    result["release"] = baseSigningOptions["release"];
+  } else if (!hasBaseDebug) {
+    result["release"] = baseSigningOptions;
+  }
+  return result;
 }
