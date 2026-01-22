@@ -78,7 +78,7 @@ export default class SWFDebugConfigurationProvider
 
   provideDebugConfigurations(
     workspaceFolder: vscode.WorkspaceFolder | undefined,
-    token?: vscode.CancellationToken
+    token?: vscode.CancellationToken,
   ): vscode.ProviderResult<SWFDebugConfiguration[]> {
     if (workspaceFolder === undefined) {
       return [];
@@ -97,7 +97,7 @@ export default class SWFDebugConfigurationProvider
   resolveDebugConfiguration?(
     workspaceFolder: vscode.WorkspaceFolder | undefined,
     debugConfiguration: SWFDebugConfiguration,
-    token?: vscode.CancellationToken
+    token?: vscode.CancellationToken,
   ): SWFDebugConfiguration | undefined {
     let paths = this.pathsCallback();
     if (!paths) {
@@ -116,24 +116,24 @@ export default class SWFDebugConfigurationProvider
       // special case: launch configuration is defined in .code-workspace file
       if (asconfigPath === undefined) {
         vscode.window.showErrorMessage(
-          `Failed to debug SWF. Launch configurations in workspace files must specify asconfigPath field.`
+          `Failed to debug SWF. Launch configurations in workspace files must specify asconfigPath field.`,
         );
         return undefined;
       }
       let asconfigPathParts = asconfigPath.split(/[\\\/]/g);
       if (asconfigPathParts.length < 2) {
         vscode.window.showErrorMessage(
-          `Failed to debug SWF. Launch configurations in workspace files must specify asconfigPath starting with workspace folder name.`
+          `Failed to debug SWF. Launch configurations in workspace files must specify asconfigPath starting with workspace folder name.`,
         );
         return undefined;
       }
       let workspaceNameToFind = asconfigPathParts[0];
       workspaceFolder = vscode.workspace.workspaceFolders.find(
-        (workspaceFolder) => workspaceFolder.name == workspaceNameToFind
+        (workspaceFolder) => workspaceFolder.name == workspaceNameToFind,
       );
       if (!workspaceFolder) {
         vscode.window.showErrorMessage(
-          `Failed to debug SWF. Workspace folder not found for file: ${asconfigPath}`
+          `Failed to debug SWF. Workspace folder not found for file: ${asconfigPath}`,
         );
         return undefined;
       }
@@ -151,7 +151,7 @@ export default class SWFDebugConfigurationProvider
           try {
             const asconfigFile: string = fs.readFileSync(
               currentAsconfigPath,
-              "utf8"
+              "utf8",
             );
             const parsedAsconfigFile: any = json5.parse(asconfigFile);
             if (asconfigJSON) {
@@ -165,7 +165,7 @@ export default class SWFDebugConfigurationProvider
                 if (!path.isAbsolute(currentAsconfigPath)) {
                   currentAsconfigPath = path.resolve(
                     workspaceFolder.uri.fsPath,
-                    currentAsconfigPath
+                    currentAsconfigPath,
                   );
                 }
                 continue;
@@ -174,7 +174,7 @@ export default class SWFDebugConfigurationProvider
           } catch (error) {
             //something went terribly wrong!
             vscode.window.showErrorMessage(
-              `Failed to debug SWF. Error reading file: ${currentAsconfigPath}`
+              `Failed to debug SWF. Error reading file: ${currentAsconfigPath}`,
             );
             console.error(error);
             return undefined;
@@ -201,7 +201,7 @@ export default class SWFDebugConfigurationProvider
         workspaceFolder,
         asconfigJSON,
         asconfigPath,
-        debugConfiguration
+        debugConfiguration,
       );
     }
     return this.resolveLaunchDebugConfiguration(
@@ -209,7 +209,7 @@ export default class SWFDebugConfigurationProvider
       asconfigJSON,
       asconfigPath,
       paths.frameworkSdkPath,
-      debugConfiguration
+      debugConfiguration,
     );
   }
 
@@ -217,7 +217,7 @@ export default class SWFDebugConfigurationProvider
     workspaceFolder: vscode.WorkspaceFolder | undefined,
     asconfigJSON: any,
     asconfigPath: string,
-    debugConfiguration: SWFDebugConfiguration
+    debugConfiguration: SWFDebugConfiguration,
   ): SWFDebugConfiguration | undefined {
     const projectRoot = path.dirname(asconfigPath);
     let applicationID = debugConfiguration.applicationID;
@@ -246,13 +246,13 @@ export default class SWFDebugConfigurationProvider
           try {
             let appDescriptorContent = fs.readFileSync(
               appDescriptorPath,
-              "utf8"
+              "utf8",
             );
             applicationID = findApplicationID(appDescriptorContent);
           } catch (e) {
             //something went terribly wrong!
             vscode.window.showErrorMessage(
-              `Failed to debug SWF. Error reading file: ${appDescriptorPath}`
+              `Failed to debug SWF. Error reading file: ${appDescriptorPath}`,
             );
             return undefined;
           }
@@ -292,7 +292,7 @@ export default class SWFDebugConfigurationProvider
 
       if (!applicationID) {
         vscode.window.showErrorMessage(
-          `Error reading Adobe AIR application <id> for platform "${platform}".`
+          `Error reading Adobe AIR application <id> for platform "${platform}".`,
         );
         return undefined;
       }
@@ -317,7 +317,7 @@ export default class SWFDebugConfigurationProvider
     asconfigJSON: any,
     asconfigPath: string,
     frameworkSdkPath: string | null | undefined,
-    debugConfiguration: SWFDebugConfiguration
+    debugConfiguration: SWFDebugConfiguration,
   ): SWFDebugConfiguration | undefined {
     const projectRoot = path.dirname(asconfigPath);
     let program = debugConfiguration.program;
@@ -350,7 +350,7 @@ export default class SWFDebugConfigurationProvider
               if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                 appDescriptorPath = path.resolve(
                   projectRoot,
-                  appDescriptorPath
+                  appDescriptorPath,
                 );
               }
             }
@@ -362,7 +362,7 @@ export default class SWFDebugConfigurationProvider
               if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                 appDescriptorPath = path.resolve(
                   projectRoot,
-                  appDescriptorPath
+                  appDescriptorPath,
                 );
               }
             }
@@ -374,7 +374,7 @@ export default class SWFDebugConfigurationProvider
               if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                 appDescriptorPath = path.resolve(
                   projectRoot,
-                  appDescriptorPath
+                  appDescriptorPath,
                 );
               }
             }
@@ -386,7 +386,7 @@ export default class SWFDebugConfigurationProvider
               if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                 appDescriptorPath = path.resolve(
                   projectRoot,
-                  appDescriptorPath
+                  appDescriptorPath,
                 );
               }
             }
@@ -400,7 +400,7 @@ export default class SWFDebugConfigurationProvider
                 if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                   appDescriptorPath = path.resolve(
                     projectRoot,
-                    appDescriptorPath
+                    appDescriptorPath,
                   );
                 }
               } else if ("android" in application) {
@@ -408,7 +408,7 @@ export default class SWFDebugConfigurationProvider
                 if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                   appDescriptorPath = path.resolve(
                     projectRoot,
-                    appDescriptorPath
+                    appDescriptorPath,
                   );
                 }
               }
@@ -423,7 +423,7 @@ export default class SWFDebugConfigurationProvider
                   ) {
                     appDescriptorPath = path.resolve(
                       projectRoot,
-                      appDescriptorPath
+                      appDescriptorPath,
                     );
                   }
                 }
@@ -432,7 +432,7 @@ export default class SWFDebugConfigurationProvider
                 if (appDescriptorPath && !path.isAbsolute(appDescriptorPath)) {
                   appDescriptorPath = path.resolve(
                     projectRoot,
-                    appDescriptorPath
+                    appDescriptorPath,
                   );
                 }
               }
@@ -493,7 +493,7 @@ export default class SWFDebugConfigurationProvider
       for (let sourcePathEntry of sourcePath) {
         let filePath = path.join(
           sourcePathEntry,
-          mainClassPrefix + FILE_EXTENSION_AS
+          mainClassPrefix + FILE_EXTENSION_AS,
         );
         let absoluteFilePath = filePath;
         if (!path.isAbsolute(absoluteFilePath)) {
@@ -504,7 +504,7 @@ export default class SWFDebugConfigurationProvider
         } else {
           let filePath = path.join(
             sourcePathEntry,
-            mainClassPrefix + FILE_EXTENSION_MXML
+            mainClassPrefix + FILE_EXTENSION_MXML,
           );
           let absoluteFilePath = filePath;
           if (!path.isAbsolute(absoluteFilePath)) {
@@ -549,7 +549,7 @@ export default class SWFDebugConfigurationProvider
         //we can generate the name automatically.
         program = generateApplicationDescriptorProgram(
           outputPath,
-          mainClassPath
+          mainClassPath,
         );
       } else if (outputPath !== null) {
         //if the output compiler option is specified, then that's what
@@ -573,7 +573,7 @@ export default class SWFDebugConfigurationProvider
     }
     if (!program) {
       vscode.window.showErrorMessage(
-        `Missing "program" path for SWF debug configuration. Must be a .swf file or an Adobe AIR application descriptor.`
+        `Missing "program" path for SWF debug configuration. Must be a .swf file or an Adobe AIR application descriptor.`,
       );
       return undefined;
     }
@@ -583,7 +583,7 @@ export default class SWFDebugConfigurationProvider
       !debugConfiguration.runtimeExecutable
     ) {
       vscode.window.showErrorMessage(
-        `Missing "runtime executable" path for SWF debug configuration. Requires "adl" from an Adobe AIR SDK.`
+        `Missing "runtime executable" path for SWF debug configuration. Requires "adl" from an Adobe AIR SDK.`,
       );
       return undefined;
     }
@@ -614,7 +614,7 @@ export default class SWFDebugConfigurationProvider
               ...fs
                 .readdirSync(newItem)
                 .filter((child) => child.endsWith(FILE_EXTENSION_ANE))
-                .map((child) => path.resolve(newItem, child))
+                .map((child) => path.resolve(newItem, child)),
             );
           }
           return result;
@@ -650,7 +650,7 @@ export default class SWFDebugConfigurationProvider
 
 function generateApplicationDescriptorProgram(
   outputPath: string | null | undefined,
-  mainClassPath: string | null | undefined
+  mainClassPath: string | null | undefined,
 ): string | undefined {
   let descriptorName: string | null = null;
   if (mainClassPath) {
@@ -695,7 +695,7 @@ function mergeConfigs(configData: any, baseConfigData: any): any {
   keys.forEach(function (
     value: PropertyKey,
     key: PropertyKey,
-    set: Set<PropertyKey>
+    set: Set<PropertyKey>,
   ): void {
     if (key === "extends") {
       //safe to skip
@@ -709,13 +709,13 @@ function mergeConfigs(configData: any, baseConfigData: any): any {
       } else if (key === "compilerOptions") {
         result[key] = mergeCompilerOptions(
           configData[key],
-          baseConfigData[key]
+          baseConfigData[key],
         );
       } else if (key === "airOptions") {
         result[key] = mergeAIROptions(
           configData[key],
           baseConfigData[key],
-          true
+          true,
         );
       } else {
         result[key] = mergeObjectsSimple(configData[key], baseConfigData[key]);
@@ -778,7 +778,7 @@ function mergeArrays(array: any[], baseArray: any[]): any[] {
 function mergeArrayWithComparisonKey(
   array: any[],
   baseArray: any[],
-  comparisonKey: string
+  comparisonKey: string,
 ): any[] {
   var result: any[] = array.slice();
   var values = new Set<any>();
@@ -799,7 +799,7 @@ function mergeArrayWithComparisonKey(
 
 function mergeCompilerOptions(
   compilerOptions: any,
-  baseCompilerOptions: any
+  baseCompilerOptions: any,
 ): any {
   const result: any = {};
   for (const key in baseCompilerOptions) {
@@ -816,7 +816,7 @@ function mergeCompilerOptions(
           result[key] = mergeArrayWithComparisonKey(
             newValue as any[],
             oldDefine as any[],
-            "name"
+            "name",
           );
         } else {
           result[key] = newValue;
@@ -862,7 +862,7 @@ function mergeApplication(application: any, baseApplication: any): any {
 function mergeAIROptions(
   airOptions: any,
   baseAIROptions: any,
-  handlePlatforms: boolean
+  handlePlatforms: boolean,
 ): any {
   const result: any = {};
   const keys = new Set<PropertyKey>();
@@ -886,7 +886,7 @@ function mergeAIROptions(
   keys.forEach(function (
     value: PropertyKey,
     key: PropertyKey,
-    set: Set<PropertyKey>
+    set: Set<PropertyKey>,
   ): void {
     var hasConfig: Boolean = airOptions.hasOwnProperty(key);
     var hasBase: Boolean = baseAIROptions.hasOwnProperty(key);
@@ -899,7 +899,7 @@ function mergeAIROptions(
         result[key] = mergeArrayWithComparisonKey(
           newValue as any[],
           baseValue as any[],
-          "path"
+          "path",
         );
       } else if (key === "signingOptions") {
         result[key] = mergeSigningOptions(newValue, baseValue);
@@ -919,7 +919,7 @@ function mergeAIROptions(
 
 function mergeSigningOptions(
   signingOptions: any,
-  baseSigningOptions: any
+  baseSigningOptions: any,
 ): any {
   const hasDebug = signingOptions.hasOwnProperty("debug");
   const hasRelease = signingOptions.hasOwnProperty("release");
