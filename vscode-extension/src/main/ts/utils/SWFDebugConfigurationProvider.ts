@@ -107,6 +107,23 @@ export default class SWFDebugConfigurationProvider
       throw new Error("SWF debugger launch failed. Java path not found.");
     }
 
+    if (process.platform === "win32" && debugConfiguration.windows) {
+      debugConfiguration = Object.assign(
+        debugConfiguration,
+        debugConfiguration.windows,
+      );
+    } else if (process.platform == "darwin" && debugConfiguration.osx) {
+      debugConfiguration = Object.assign(
+        debugConfiguration,
+        debugConfiguration.osx,
+      );
+    } else if (process.platform == "linux" && debugConfiguration.linux) {
+      debugConfiguration = Object.assign(
+        debugConfiguration,
+        debugConfiguration.linux,
+      );
+    }
+
     let asconfigPath = debugConfiguration.asconfigPath;
 
     if (
