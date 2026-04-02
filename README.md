@@ -22,6 +22,10 @@ mvn clean package
 
 The extension will be generated in _distribution/target/vscode-swf-debug/vscode-swf-debug_. This directory may be run inside Visual Studio Code's extension host. Additionally, a _.vsix_ file will be generated that may be manually installed in Visual Studio Code.
 
+## Nightly builds
+
+Continuous integration produces builds on every push to the repository. Visit the [Actions page for vscode-swf-debug](https://github.com/BowlerHatLLC/vscode-swf-debug/actions?query=branch%3Amain+is%3Asuccess+event%3Apush) to find the most recent successful runs. Each run should have an artifact attached with the file extension _.vsix_. You may install this file in Visual Studio Code from the menu in the **Extensions** view or by running the **Extensions: Install from VSIX…** command.
+
 ## Support this project
 
 The [SWF Debugger for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=bowlerhatllc.vscode-swf-debug) is developed by [Josh Tynjala](http://patreon.com/josht) with the support of community members like you.
