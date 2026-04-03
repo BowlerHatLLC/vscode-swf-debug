@@ -1,5 +1,12 @@
 # SWF Debugger for Visual Studio Code Changelog
 
+## v1.12.0
+
+### New Features
+
+- General: When parsing _asconfig.json_ to populate optional _launch.json_ fields, recursively follow paths specified by the `extends` field.
+- General: Support `windows`, `osx`, and `linux` sections in _launch.json_ to provide separate options for each operating system.
+
 ## v1.11.0
 
 ### New Features
