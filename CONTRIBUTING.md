@@ -1,4 +1,4 @@
-# Contributing to vscode-as3mxml
+# Contributing to vscode-swf-debug
 
 ## Use of generative AI
 
