@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "erasableSyntaxOnly": true,
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "target": "es6",
+    "outDir": "./target",
+    "sourceMap": true,
+    "types": ["node"],
+    "rootDir": "./src/main/ts"
+  }
+}
